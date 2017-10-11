@@ -75,7 +75,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/views/:name', function (req, res) {
-	res.sendFile(req.params.name);
+	res.sendFile('/views/'+req.params.name);
 });
 
 app.get('/pagecount', function (req, res) {
