@@ -1,0 +1,20 @@
+extends layout
+
+block scripts
+  script(type='text/javascript').
+    window.app_id = "#{app_id}";
+  script(src='/dist/loader/js/loader.js')
+  script(src='/dist/loader/js/loader.js', data-kloudless-object='Kloudless2')
+  script(src='/javascripts/file-explorer-test.js')
+
+block content
+  p Click below to test the explorer/saver.
+  button#file-test First explorer!
+  button#folder-test Second explorer!
+  button#saver-test Save ME!
+  button#close-test Close
+  br
+  br
+  p Drop Zone
+  div#dropzone(style="border-style:dashed; border-width:1px; width:600px;height:100px")
+

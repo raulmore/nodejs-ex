@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>GeoDocuments</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+		<link rel="stylesheet" href="lib/leaflet/leaflet.dialog.css">
+		<!--<link rel="stylesheet" href="lib/leaflet/leaflet.sidebar.min.css">-->
+		<link rel="stylesheet" href="lib/leaflet/leaflet.geosearch.css">
+		<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="css/app.css">
+		<script src="lib/zepto/zepto.min.js"></script>
+		<script src="lib/leaflet/leaflet.min.js"></script>
+		<script src="lib/leaflet/leaflet.dialog.min.js"></script>
+		<!--<script src="lib/leaflet/leaflet.sidebar.min.js"></script>-->
+		<script src="lib/leaflet/leaflet.geosearch.min.js"></script>
+		<script src="js/app.js"></script>
+	</head>
+	<body>
+		<!--<div id="sidebar" class="sidebar collapsed">
+			<div class="sidebar-tabs">
+				<ul role="tablist">
+					<li>
+						<a href="#home" role="tab">
+							<i class="fa fa-bars"></i>
+						</a>
+					</li>
+				</ul>
+				<ul role="tablist">
+					<li>
+						<a href="#settings" role="tab">
+							<i class="fa fa-gear"></i>
+						</a>
+					</li>
+				</ul>
+			</div>
+			<div class="sidebar-content">
+				<div class="sidebar-pane" id="home">
+					<h1 class="sidebar-header">
+						sidebar-v2
+						<span class="sidebar-close">
+							<i class="fa fa-caret-left"></i>
+						</span>
+					</h1>
+				</div>
+				<div class="sidebar-pane" id="messages">
+					<h1 class="sidebar-header">
+						Messages
+						<span class="sidebar-close">
+							<i class="fa fa-caret-left"></i>
+						</span>
+					</h1>
+				</div>
+				<div class="sidebar-pane" id="settings">
+					<h1 class="sidebar-header">
+						Settings
+						<span class="sidebar-close">
+							<i class="fa fa-caret-left"></i>
+						</span>
+					</h1>
+				</div>
+			</div>
+		</div>-->
+		<div id="map" class="sidebar-map"></div>
+		<div class="split">
+			<span>
+				<i class="fa fa-circle"></i>
+				<i class="fa fa-circle"></i>
+				<i class="fa fa-circle"></i>
+			</span>
+		</div>
+		<div class="files">
+			<div class="flipper">
+				<div class="explorer">
+					<a href="#" class="button switch">
+						<i class="fa fa-search"></i>
+					</a>
+				</div>
+				<div class="searcher">
+					<a href="#" class="button switch">
+						<i class="fa fa-folder-open-o"></i>
+					</a>
+				</div>
+			</div>
+		</div>
+	</body>
+	<div class="search-dialog">
+		<div class="center">
+			¿Qué motor quieres utilizar para la búsqueda?
+		</div>
+		<div class="leaflet-bar leaflet-control search-selector">
+			<a name="here">HERE</a>
+			<a name="esri">ArcGIS</a>
+			<a name="google">Google</a>
+			<a name="openstreetmap">&nbsp;&nbsp;OpenStreetMap&nbsp;&nbsp;</a>
+			<a name="bing">Bing</a>
+		</div>
+		<div class="center">
+			<label>
+				<input type="checkbox" checked/>
+				No volver a preguntar
+			</label>
+		</div>
+	</div>
+</html>
