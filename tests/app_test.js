@@ -1,4 +1,4 @@
-/*var server   = require('./aux'),
+var server   = require('../app'),
     chai     = require('chai'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
@@ -28,18 +28,4 @@ describe('Basic routes tests', function() {
         })
 
     })
-})*/
-
-
-const port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080, 
-		ip = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-
-require('http').createServer((req, res) => {
-	res.writeHead(200, {
-		'Content-Type': 'text/html'
-	});
-}).listen(port, ip, () => {
-	console.log(`Server running at http://${ip}:${port}/`);
-});
-
-
+})
