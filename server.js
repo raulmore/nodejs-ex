@@ -61,28 +61,34 @@ require('http').createServer((req, res) => {
 		}
 	}
 	else {
-		fs.readFile(__dirname+'/public'+url[0], (err, data) => {
-			if (err) {
-				console.log(err);
-				res.writeHead(404);
-			}
-			else {
-				if (req.url.indexOf('.svg') != -1) {
-					res.writeHead(200, {'Content-Type': 'image/svg+xml'});
-				}
-				if (req.url.indexOf('.html') != -1) {
-					res.writeHead(200, {'Content-Type': 'text/html'});
-				}
-				if (req.url.indexOf('.js') != -1) { 
-					res.writeHead(200, {'Content-Type': 'text/javascript'});
-				}
-				if (req.url.indexOf('.css') != -1) {
-					res.writeHead(200, {'Content-Type': 'text/css'});
-				}
-				res.write(data);
-			}
+		if (url[0].toLowerCase() == 'pagecount') {
+			res.writeHead(200, {'Content-Type': 'text/html'});
 			res.end();
-		});
+		}
+		else {
+			fs.readFile(__dirname+'/public'+url[0], (err, data) => {
+				if (err) {
+					console.log(err);
+					res.writeHead(404);
+				}
+				else {
+					if (req.url.indexOf('.svg') != -1) {
+						res.writeHead(200, {'Content-Type': 'image/svg+xml'});
+					}
+					if (req.url.indexOf('.html') != -1) {
+						res.writeHead(200, {'Content-Type': 'text/html'});
+					}
+					if (req.url.indexOf('.js') != -1) { 
+						res.writeHead(200, {'Content-Type': 'text/javascript'});
+					}
+					if (req.url.indexOf('.css') != -1) {
+						res.writeHead(200, {'Content-Type': 'text/css'});
+					}
+					res.write(data);
+				}
+				res.end();
+			});
+		}
 	}
 }).listen(port, ip, () => {
 	console.log(`Server running at http://${ip}:${port}/`);
