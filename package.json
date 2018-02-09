@@ -4,7 +4,7 @@
   "description": "Geodocuments prototype",
   "main": "server.js",
   "dependencies": {
-    "mongodb": "^2.1.16",
+    "mongodb": "^2.1.16"
   },
   "engine": {
     "node": "*",
