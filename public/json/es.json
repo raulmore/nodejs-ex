@@ -49,7 +49,7 @@
 	"Type something to filter documents...": "Escribe algo para filtrar los documentos...",
 	"Unblock auto-searching": "Desbloquear búsqueda automática",
 	"Yes": "Sí",
-	"You must enter a valid url": "Debes introducir una url válida"
+	"You must enter a valid url (http or https)": "Debes introducir una url válida (http o https)"
 }
 
 

@@ -504,7 +504,8 @@ $(document).on('ready', function () {
 			map.removeControl(draw) &&
 			map.addLayer(docsFeatures) &&
 			$('.note').remove() && 
-			$('[aria-haspopup]').off('mouseover').off('mouseleave');
+			$('[aria-haspopup]').off('mouseover').off('mouseleave') &&
+			docFeature.clearLayers();
 		$steps.toggleClass('hide');
 	});
 	$save.on('click', function () {

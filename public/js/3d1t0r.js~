@@ -369,15 +369,6 @@ $(document).on('ready', function () {
 	}, {
 		'position': 'topleft'
 	}).addTo(map);
-	map.addControl(searchControl = new GeoSearch.GeoSearchControl());
-	map.removeLayer(searchControl.markers);
-	var bcrect = searchControl.getContainer().getBoundingClientRect(),
-		dialog = L.control.dialog({
-			anchor: [bcrect.top - 18, bcrect.left + 12],
-			size: [220, 240],
-			initOpen: false
-		}).setContent($('.search-dialog').html()).addTo(map);
-	dialog.freeze();
 	map.on('draw:created', function (ev) {
 		ev.layer.options.color = '#ff0';
 		docFeature.addLayer(ev.layer);
@@ -474,9 +465,6 @@ $(document).on('ready', function () {
 	}).parent().parent().parent()).on('click', function () {
 		searchControl.closeResults();
 	});
-	$('a:not(.reset)', searchControl.getContainer()).on('click', function () {
-		dialog.open();
-	});
 	$('#block-input').on('change', function () {
 		var title = this.parentNode.title;
 		this.parentNode.title = this.parentNode.getAttribute('data-title');
@@ -516,7 +504,8 @@ $(document).on('ready', function () {
 			map.removeControl(draw) &&
 			map.addLayer(docsFeatures) &&
 			$('.note').remove() && 
-			$('[aria-haspopup]').off('mouseover').off('mouseleave');
+			$('[aria-haspopup]').off('mouseover').off('mouseleave') &&
+			docFeature.clearLayers();
 		$steps.toggleClass('hide');
 	});
 	$save.on('click', function () {

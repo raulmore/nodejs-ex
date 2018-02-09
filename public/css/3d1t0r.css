@@ -331,10 +331,10 @@ ul input[type=checkbox]:checked + label {
 	background-color: rgba(0,0,0,.5);
 }
 .flipper .writer {
-	background-color: rgba(255,255,200,.9);
+	background-color: rgba(205,205,205,.9);
 }
 .flipper.X .writer {
-	transform: rotateX(-180deg);
+	transform: rotateX(180deg);
 }
 .flipper.X .reader {
 	transform: rotateX(0deg);
@@ -343,16 +343,16 @@ ul input[type=checkbox]:checked + label {
 	transform: rotateX(0deg);
 }
 .flipper.X.flip .reader {
-	transform: rotateX(-180deg);
+	transform: rotateX(180deg);
 }
 .flipper.Y .explorer {
 	transform: rotateY(0deg);
 }
 .flipper.Y .searcher {
-	transform: rotateY(180deg);
+	transform: rotateY(-180deg);
 }
 .flipper.Y.flip .explorer {
-	transform: rotateY(180deg);
+	transform: rotateY(-180deg);
 }
 .flipper.Y.flip .searcher {
 	transform: rotateY(0deg);
@@ -512,13 +512,13 @@ input:checked + .slider:before {
 }
 
 
-
+.form-group {}
 .form-group {
 	position: relative;
 	padding-top: 1.5rem;
 	margin-top: 0.5rem;
 }
-.form-group>label {
+.form-group label {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -526,43 +526,113 @@ input:checked + .slider:before {
 	transform: translateY(0);
 	transition: all 0.2s ease-out;
 }
-.form-group>input {
+.form-group input {
 	padding: 10px;
 	background-repeat: no-repeat;
 	background-position: right 1.5rem center;
 	background-size: 0.75rem;
 }
-.form-group>input:not(:focus) + label {
+.form-group input:not(:focus) + label {
 	opacity: 0;
 	transform: translateY(1rem);
 }
-.form-group>input:valid + label {
-	opacity: 0;
+.form-group .choices input {
+	padding: 0;
 }
-.form-group>input:valid {
+.form-group .choices label {
+	margin-top: -10px;
+}
+.form-group input:valid {
 	border-color: #0f0;
 	background-image: url("data:image/svg+xml,%3Csvg width='45px' height='34px' viewBox='0 0 45 34' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cg stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg transform='translate%28-56.000000, -59.000000%29' fill='%232EEC96'%3E%3Cpolygon points='70.1468531 85.8671329 97.013986 59 100.58042 62.5664336 70.1468531 93 56 78.8531469 59.5664336 75.2867133'%3E%3C/polygon%3E%3C/g%3E%3C/g%3E%3C/svg%3E%0A");
 }
-.form-group>input:invalid {
+.form-group input:invalid {
 	border-color: #f00;
 	background-image: url("data:image/svg+xml,%3Csvg width='30px' height='30px' viewBox='0 0 30 30' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cg stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg transform='translate%28-128.000000, -59.000000%29' fill='%23F44336'%3E%3Cpolygon points='157.848404 61.9920213 145.980053 73.8603723 157.848404 85.7287234 154.856383 88.7207447 142.988032 76.8523936 131.119681 88.7207447 128.12766 85.7287234 139.996011 73.8603723 128.12766 61.9920213 131.119681 59 142.988032 70.8683511 154.856383 59'%3E%3C/polygon%3E%3C/g%3E%3C/g%3E%3C/svg%3E%0A");
 }
 
-input[type="radio"] + label span {
-	display: inline-block;
-	vertical-align: middle;
-	width: 15px;
-	height: 15px;
-	border: 2px solid #888;
-	border-radius: 10px;
-	background: radial-gradient(#eee, #aaa);
+
+
+
+
+::-ms-clear {
+	display: none;
 }
-/* we want the radio buttons to be circular */
-input[type="radio"] + label span  {
-	border-radius: 50%;
+::-webkit-input-placeholder {
+	color:red;
+	font-weight: bold;
 }
-input[type="radio"]:checked + label span {
-	background-image: radial-gradient(#ff0, #000);
+::-moz-placeholder {
+	color:red;
+	font-weight: bold;
+}
+::-ms-placeholder {
+	color:red;
+	font-weight: bold;
+}
+::placeholder {
+	color:red;
+	font-weight: bold;
 }
 
+
+
+
+.radio {
+	position: relative;
+}
+.radio label {
+	position: relative;
+	margin-bottom: 0.5rem;
+	padding: 0 1.5rem;
+	font-weight: 400;
+	line-height: 1;
+	cursor: pointer;
+	user-select: none;
+}
+.radio label:before {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1rem;
+	height: 1rem;
+	border-radius: 50%;
+	background-color: hsl(220, 10%, 90%);
+	transition: background-color 0.2s ease-out;
+	content: '';
+}
+.radio input[type=radio] {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+.radio input[type=radio] + label:hover:before {
+	background-color: hsl(220, 10%, 80%);
+}
+.radio input[type=radio]:focus + label:before {
+	background-color: hsl(220, 10%, 90%);
+	box-shadow: 0 0 0 0.2rem hsl(210, 100%, 85%);
+}
+.radio input[type=radio]:checked + label:before,
+.radio input[type=radio][aria-checked] + label:before {
+	border-color: hsl(210, 100%, 50%);
+	background-color: hsl(210, 100%, 50%);
+}
+.radio input[type=radio]:checked + label:after,
+.radio input[type=radio][aria-checked] + label:after {
+	display: block;
+	position: absolute;
+	top: 0.25rem;
+	left: 0.25rem;
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 50%;
+	background-color: white;
+	content: '';
+}
 
