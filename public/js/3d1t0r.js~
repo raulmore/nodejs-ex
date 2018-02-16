@@ -9,7 +9,13 @@ window.LIMIT = 4;
 $(document).on('ready', function () {
 	window.map = L.map('map', {
 		center: [51.50, -0.09],
-		zoom: 13
+		zoom: 13,
+		timeDimension: true,
+		timeDimensionOptions: {
+			timeInterval: '2014-09-30/2014-10-30',
+			period: 'PT1H'
+		},
+		timeDimensionControl: true
 	});	
 	var googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
 		maxZoom: 20,
@@ -49,6 +55,9 @@ $(document).on('ready', function () {
 		},
 		setList = function (data, text, skip) {
 			featureCollection2featureGroup(data, docsFeatures, skip > 0);
+			filterByTime({
+				time: map.timeDimension.getCurrentTime()
+			});
 			skip === 0 &&
 				$resultLi.parent().children('[id]').remove();
 			$skipLi.addClass('hide');
@@ -107,6 +116,9 @@ $(document).on('ready', function () {
 				(nodes = []) &&	
 				tree.selectedNode.removeChildNodes();
 			featureCollection2featureGroup(data, docsFeatures, skip4tags || skip4docs);
+			filterByTime({
+				time: map.timeDimension.getCurrentTime()
+			});
 			for (i = 0; i < data.tags.length; i++) {
 				data.tags[i] = data.tags[i]._id.split(text+'/')[1].split('/')[0];
 				for (j = 0; j < nodes.length; j++) {
@@ -285,12 +297,29 @@ $(document).on('ready', function () {
 			}).show();
 		},
 		autoSearchClock = setInterval(autoSearch, 1000),
-		light, lang, doc_id = null, wF = mobile ? 1 : 0.4;
-
+		light, lang, doc_id = null, wF = mobile ? 1 : 0.4,
+		filterByTime = function(ev) {
+			var layers = docsFeatures.getLayers(),
+				i;
+			for (i = 0; i < layers.length; i++) {
+				layers[i].setStyle &&
+					((layers[i].time <= ev.time || !layers[i].time) &&
+						(layers[i].options.color = window.light ? 'cyan' : 'blue')
+					||
+						(layers[i].options.color = 'transparent')) &&
+					layers[i].setStyle(layers[i].options)
+				||
+					((layers[i].time <= ev.time || !layers[i].time) &&
+						layers[i].setOpacity(1)
+					||
+						layers[i].setOpacity(0));
+			}
+		};
+	map.timeDimension.on('timeload', filterByTime);
 	lastBounds._northEast.lng = lastBounds._southWest.lng + (lastBounds._northEast.lng - lastBounds._southWest.lng)*wF;
 	mobile &&
 		(lastBounds._southWest.lat = lastBounds._southWest.lat + (lastBounds._northEast.lat - lastBounds._southWest.lat)/2);
- 
+	
 	if ((lang = (navigator.language ? navigator.language : navigator.userLanguage).split('-')[0]) != 'en') {
 		$.ajax({
 			type: 'GET',
@@ -346,6 +375,17 @@ $(document).on('ready', function () {
 				$('a:not(.reset)', searchControl.getContainer()).on('click', function () {
 					dialog.open();
 				});
+				$('.leaflet-control-dialog-close', $('.search-selector a').on('click', function (ev) {
+					console.log(124);
+					searchControl.options.provider = providers[ev.target.name];
+					$('[type="checkbox"]', ev.target.parentNode.parentNode)[0].checked ?
+						($('a', searchControl.getContainer()).off('click') &&
+						dialog.destroy())
+					:
+						dialog.close();
+				}).parent().parent().parent()).on('click', function () {
+					searchControl.closeResults();
+				});
 				var bcrect = searchControl.getContainer().getBoundingClientRect();
 				dialog = L.control.dialog({
 					anchor: [bcrect.top - 18, bcrect.left + 12],
@@ -353,8 +393,8 @@ $(document).on('ready', function () {
 					initOpen: false
 				}).setContent($('.search-dialog').html()).addTo(map);
 				dialog.freeze();
-				dict['All documents'] &&
-					root.setText(dict['All documents']);
+				dict['All categories'] &&
+					root.setText(dict['All categories']);
 				window.dict = dict;
 			}
 		});
@@ -455,16 +495,6 @@ $(document).on('ready', function () {
 	$('a.edit').on('click', function () {
 		doc_id = tree.selectedNode.tag;
 	});
-	$('.leaflet-control-dialog-close', $('.search-selector a').on('click', function (ev) {
-		searchControl.options.provider = providers[ev.target.name];
-		$('[type="checkbox"]', ev.target.parentNode.parentNode)[0].checked ?
-			($('a', searchControl.getContainer()).off('click') &&
-			dialog.destroy())
-		:
-			dialog.close();
-	}).parent().parent().parent()).on('click', function () {
-		searchControl.closeResults();
-	});
 	$('#block-input').on('change', function () {
 		var title = this.parentNode.title;
 		this.parentNode.title = this.parentNode.getAttribute('data-title');
@@ -527,6 +557,9 @@ $(document).on('ready', function () {
 			categories.push('');
 		feature.name = titleInput.value;
 		feature.url = urlInput.value;
+		feature.properties = {
+			time: new Date(dateInput.value).getTime()
+		}
 		feature.categories = categories;
 		$.ajax({
 			type: doc_id ? 'PUT' : 'POST',
@@ -566,6 +599,9 @@ $(document).on('ready', function () {
 			color: light ? 'cyan' : 'blue'
 		});
 		window.light = light;
+		filterByTime({
+			time: map.timeDimension.getCurrentTime()
+		});
 	});
 	$('span.note.search i').on('click', function () {
 		$('.note.search').remove();
@@ -674,6 +710,7 @@ $(document).on('ready', function () {
 	
 	var urlInput = $('[name=url]')[0],
 		titleInput = $('[name=title]')[0],
+		dateInput = $('[name=date]')[0],
 		typeoflinkInput = $('[name=typeoflink]').on('change', function () {
 			this.value == '1' &&
 				(urlInput.disabled = true) &&
@@ -726,7 +763,8 @@ $(document).on('ready', function () {
 			}]
 		}
 	});
-	root = tree.createNode('All documents', true, 'fa fa-folder-open', null, null, 'ctx4folder');
+	datepicker(dateInput);
+	root = tree.createNode('All categories', true, 'fa fa-folder-open', null, null, 'ctx4folder');
 	tree.nodeBeforeOpenEvent = function (node) {
 		node.setIcon('fa fa-folder-open');
 	}
@@ -810,7 +848,6 @@ function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 		feature = geoJSON.features[i];
 		coords = feature.geometry.coordinates;
 		options = feature.style;
-		options.id = feature._id;
 		layer = false;
 		switch (feature.geometry.type) {
 			case 'Point':
@@ -836,8 +873,9 @@ function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 				break;
 		}
 		layer &&
+			(layer.id = feature._id) &&
 			layer.on('click', function (ev) {
-				var doc = documents[ev.target.options.id],
+				var doc = documents[ev.target.id],
 					cat = doc.categories[0].split('/'), 
 					node = root, i, j, n, nodes = [], onclick;
 				for (i = 1; i < cat.length; i++) {
@@ -879,6 +917,10 @@ function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 				$('input', $('div.searcher ul')).prop('checked', false);
 				$('input', $('#'+doc._id)).prop('checked', true);
 			}) &&
+			(feature.properties && feature.properties.time &&
+				(layer.time = feature.properties.time)
+			||
+				true) &&
 			featureGroup.addLayer(layer);
 	}
 	return featureGroup;

@@ -4,26 +4,17 @@
 		<title>GeoDocuments Edit</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
 		<link rel="stylesheet" href="lib/timodal/timodal.css">
 		<link rel="stylesheet" href="lib/aimaraJS/css/aimara.css">
 		<link rel="stylesheet" href="lib/leaflet/leaflet.css">
 		<link rel="stylesheet" href="lib/leaflet/leaflet.dialog.css">
 		<link rel="stylesheet" href="lib/leaflet/leaflet.draw.css">
-		<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
-		<link rel="stylesheet" href="lib/choices/css/choices.min.css">
 		<link rel="stylesheet" href="lib/leaflet/leaflet.geosearch.css">
+		<link rel="stylesheet" href="lib/leaflet/leaflet.timedimension.control.css">
+		<link rel="stylesheet" href="lib/choices/css/choices.min.css">
+		<link rel="stylesheet" href="lib/datepicker/datepicker.css">
 		<link rel="stylesheet" href="css/3d1t0r.css">
-		<script src="js/polyfills.js"></script>
-		<script src="lib/timodal/timodal.min.js"></script>
-		<script src="lib/aimaraJS/js/aimara.min.js"></script>
-		<script src="lib/zepto/zepto.min.js"></script>
-		<script src="lib/leaflet/leaflet.min.js"></script>
-		<script src="lib/leaflet/leaflet.dialog.min.js"></script>
-		<script src="lib/leaflet/leaflet.draw.min.js"></script>
-		<script src="lib/choices/js/choices.min.js"></script>
-		<script src="lib/leaflet/leaflet.geosearch.min.js"></script>
-		<script src="lib/kloudless/kloudless.explorer.min.js"></script>
-		<script src="js/3d1t0r.js"></script>
 	</head>
 	<body>
 		<div id="map" class="sidebar-map"></div>
@@ -37,7 +28,7 @@
 		<div class="files">
 			<div class="flipper X">
 				<div class="writer">
-					<a href="#" class="button switch X ln-txt" title="Cancel"">
+					<a href="#" class="button switch X ln-txt" title="Cancel">
 						<i class="fa fa-close"></i>
 					</a>
 					<form>
@@ -46,43 +37,33 @@
 							<label for="title-input" class="ln-txt">Title of document</label>
 						</div>
 						<div class="form-group">
-							<input type="url" id="url-input" name="url" placeholder="URL" required />
-							<label for="url-input" class="ln-txt">You must enter a valid url</label>
+							<input id="url-input" name="url" type="url" placeholder="URL" pattern="^(https?://)?([a-zA-Z0-9]([a-zA-ZäöüÄÖÜ0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" required />
+							<label for="url-input" class="ln-txt">You must enter a valid url (http or https)</label>
+						</div>
+						<div class="form-group">
+							<input id="date-input" name="date" class="datepicker-here" placeholder="Date" required />
+							<label for="date-input" class="ln-txt">Date</label>
 						</div>
 						<div class="radio">
 							<input id="typeit-input" class="hide" type="radio" name="typeoflink" value=0 />
-							<label for="typeit-input" class="ln-txt"><span></span>Type it</label>
+							<label for="typeit-input" class="ln-txt">Type it</label>
 							<input id="explore-input" class="hide" type="radio" name="typeoflink" value=1 />
-							<label for="explore-input" class="ln-txt"><span></span>Explore my cloud</label>
+							<label for="explore-input" class="ln-txt">Explore my cloud</label>
 						</div>
-						<div>
-							<label>
-								<span class="ln-txt">Categories (min. 3 chars)</span>
-								<select name="tags" class="form-control" placeholder="Enter something" multiple></select>
-							</label>
+						<div class="form-group">
+							<select id="tags-select" name="tags" class="form-control ln-txt" placeholder="Enter something" multiple></select>
+							<label for="tags-select" class="ln-txt">Categories (min. 3 chars)</label>
 						</div>
 						<div>
 							<label>
 								<span class="ln-txt">Sub-categories (min. 3 chars)</span>
-								<select name="tags" choices-child="true" class="form-control" multiple></select>
+								<select name="tags" choices-child="true" class="form-control ln-txt" placeholder="Enter something" multiple></select>
 							</label>
 							<div class="w50">
 								<span class="ln-txt">Parent category</span>
 								<select name="parentTags" class="form-control ln-txt" placeholder="Enter something"></select>
 							</div>
 						</div>
-
-						<!--
-						<div>
-							<label>
-								<span class="plain">Type it</span>
-								<input type="radio" name="typeoflink" value=0 />
-							</label>
-							<label>
-								<span class="plain">Explore my cloud</span>
-								<input type="radio" name="typeoflink" value=1 />
-							</label>
-						</div>-->
 					</form>
 					<a href="#" class="button" step="map">
 						<span class="ln-txt">Next</span>
@@ -94,7 +75,7 @@
 					</a>
 					<a href="#" class="button" save>
 						<i class="fa fa-save"></i>
-						<span class="ln-txt">Guardar</span>
+						<span class="ln-txt">Save</span>
 					</a>
 				</div>
 				<div class="reader flipper Y">
@@ -139,7 +120,7 @@
 								<i class="fa fa-trash fa-stack-1x"></i>
 							</span>
 						</button>
-						<a href="#" class="button switch Y ln-txt" title="Go to documents tree"">
+						<a href="#" class="button switch Y ln-txt" title="Go to documents tree">
 							<i class="fa fa-folder-open-o"></i>
 						</a>
 						<form>
@@ -173,68 +154,82 @@
 				</div>
 			</div>
 		</div>
+		<span class="note search light">
+			<i class="fa fa-close"></i>
+			<b class="ln-txt">Either use the magnifying glass button to search for the location of the document or ...</b>
+		</span>
+		<span class="note draw light">
+			<i class="fa fa-close"></i>
+			<b class="ln-txt">... use those buttons set at the bottom to draw the circle/polygon which determines the location area of the document</b>
+		</span>
+		<div class="note draw light"></div>
+		<div class="note search light"></div>
+		<script type="text" class="search-dialog">
+			<div class="center">
+				¿Qué motor quieres utilizar para la búsqueda?
+			</div>
+			<div class="leaflet-bar leaflet-control search-selector">
+				<a name="here">HERE</a>
+				<a name="esri">ArcGIS</a>
+				<a name="google">Google</a>
+				<a name="openstreetmap">&nbsp;&nbsp;OpenStreetMap&nbsp;&nbsp;</a>
+				<a name="bing">Bing</a>
+			</div>
+			<div class="center">
+				<label>
+					<input type="checkbox" checked/>
+					No volver a preguntar
+				</label>
+			</div>
+		</script>
+		<script type="text" class="confirm-dialog ln-txt">
+			<div class="popup-wrapper">
+				<div class="popup-header"></div>
+				<div class="popup-content">
+					<span class="ln-txt">Do you really want to remove the register of document</span>
+					<b>{name}</b>?
+				</div>
+				<div class="popup-footer">
+					<button class="button cancel">
+						<b>
+							<span class="ln-txt">No</span>
+						</b>
+					</button>
+					<button class="button ok bg-red fg-white">
+						<b>
+							<span class="ln-txt">Yes</span>
+						</b>
+					</button>
+				</div>
+			</div>
+		</script>
+		<script type="text" class="registered-dialog ln-txt">
+			<div class="popup-wrapper">
+				<div class="popup-header"></div>
+				<div class="popup-content">
+					<span class="ln-txt">It has been saved the register of document</span>
+					<b>{name}</b>
+				</div>
+				<div class="popup-footer">
+					<button class="button ok">
+						<span class="ln-txt">Accept</span>
+					</button>
+				</div>
+			</div>
+		</script>
+		<script src="js/polyfills.js"></script>
+		<script src="lib/iso8601/iso8601.min.js"></script>
+		<script src="lib/timodal/timodal.min.js"></script>
+		<script src="lib/aimaraJS/js/aimara.min.js"></script>
+		<script src="lib/zepto/zepto.min.js"></script>
+		<script src="lib/leaflet/leaflet.min.js"></script>
+		<script src="lib/leaflet/leaflet.dialog.min.js"></script>
+		<script src="lib/leaflet/leaflet.draw.min.js"></script>
+		<script src="lib/leaflet/leaflet.geosearch.min.js"></script>
+		<script src="lib/leaflet/leaflet.timedimension.min.js"></script>
+		<script src="lib/choices/js/choices.min.js"></script>
+		<script src="lib/kloudless/kloudless.explorer.min.js"></script>
+		<script src="lib/datepicker/datepicker.min.js"></script>
+		<script src="js/3d1t0r.js"></script>
 	</body>
-	<span class="note search light">
-		<i class="fa fa-close"></i>
-		<b class="ln-txt">Either use the magnifying glass button to search for the location of the document or ...</b>
-	</span>
-	<span class="note draw light">
-		<i class="fa fa-close"></i>
-		<b class="ln-txt">... use those buttons set at the bottom to draw the circle/polygon which determines the location area of the document</b>
-	</span>
-	<div class="note draw light"></div>
-	<div class="note search light"></div>
-	<script type="text" class="search-dialog">
-		<div class="center">
-			¿Qué motor quieres utilizar para la búsqueda?
-		</div>
-		<div class="leaflet-bar leaflet-control search-selector">
-			<a name="here">HERE</a>
-			<a name="esri">ArcGIS</a>
-			<a name="google">Google</a>
-			<a name="openstreetmap">&nbsp;&nbsp;OpenStreetMap&nbsp;&nbsp;</a>
-			<a name="bing">Bing</a>
-		</div>
-		<div class="center">
-			<label>
-				<input type="checkbox" checked/>
-				No volver a preguntar
-			</label>
-		</div>
-	</script>
-	<script type="text" class="confirm-dialog ln-txt">
-		<div class="popup-wrapper">
-			<div class="popup-header"></div>
-			<div class="popup-content">
-				<span class="ln-txt">Do you really want to remove the register of document</span>
-				<b>{name}</b>?
-			</div>
-			<div class="popup-footer">
-				<button class="button cancel">
-					<b>
-						<span class="ln-txt">No</span>
-					</b>
-				</button>
-				<button class="button ok bg-red fg-white">
-					<b>
-						<span class="ln-txt">Yes</span>
-					</b>
-				</button>
-			</div>
-		</div>
-	</script>
-	<script type="text" class="registered-dialog ln-txt">
-		<div class="popup-wrapper">
-			<div class="popup-header"></div>
-			<div class="popup-content">
-				<span class="ln-txt">It has been saved the register of document</span>
-				<b>{name}</b>
-			</div>
-			<div class="popup-footer">
-				<button class="button ok">
-					<span class="ln-txt">Accept</span>
-				</button>
-			</div>
-		</div>
-	</script>
 </html>
