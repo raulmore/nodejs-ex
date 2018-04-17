@@ -5,7 +5,7 @@ const KEYS = [
 ];
 const fs = require('fs');
 const api = require('./api');
-const port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080, ip = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+const port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080, ip = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
 
 require('http').createServer((req, res) => {
 	var url = decodeURI(req.url).split('?'), i, key = false, tree = false, skip4docs = 0, skip4tags = 0, limit = 1000;
