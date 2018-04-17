@@ -1,8 +1,8 @@
 
-const URL = 'mongodb://localhost:27017/geodocuments';
+/*const URL = 'mongodb://localhost:27017/geodocuments';
 const MongoClient = require('mongodb').MongoClient;
-const ObjectId = require('mongodb').ObjectId;
-/*
+const ObjectId = require('mongodb').ObjectId;*/
+
 var URL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL;
 if (URL == null && process.env.DATABASE_SERVICE_NAME) {
   var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
@@ -22,7 +22,7 @@ if (URL == null && process.env.DATABASE_SERVICE_NAME) {
 }
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
-*/
+
 
 module.exports = {
 	create: (req, res, collname) => {
