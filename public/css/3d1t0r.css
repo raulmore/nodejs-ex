@@ -19,13 +19,13 @@ form label {
 	width: 50%;
 }
 .bg-red {
-	background-color: red;
+	background-color: red !important;
 }
 .fg-white {
-	color: white;
+	color: white !important;
 }
 .fg-green {
-	color: #0c0;
+	color: #0c0 !important;
 }
 .plain {
 	font-weight: normal;
@@ -45,7 +45,7 @@ form label {
 .split {
 	position: absolute;
 	top: 0;
-	left: 630px;
+	left: 650px;
 	height: -moz-calc(100% - 12px);
 	height: -webkit-calc(100% - 12px);
 	height: -o-calc(100% - 12px);
@@ -90,15 +90,38 @@ form label {
 	text-decoration: none;
 	font-size: 18px;
 	color: black;
+}
+.searcher li.result,
+.searcher li[skip] {
 	cursor: pointer;
 }
-.searcher li:hover {
+.searcher li.result:hover,
+.searcher li[skip]:hover {
 	background-color: #ddd;
 }
-.searcher li:active {
-	background-color: #ccc;
+.searcher li.result:active,
+.searcher li[skip]:active {
+	background-color: #aaa;
 }
-
+.searcher li.active {
+	background-color: rgba(0,0,255,0.2);
+	border: 5px solid #00f;
+}
+.searcher li.active.light {
+	background-color: rgba(0,255,255,0.2);
+	border: 5px solid #0ff;
+}
+.searcher li[id] {
+	-webkit-transition: .3s;
+	-moz-transition: .3s;
+	-ms-transition: .3s;
+	-o-transition: .3s;
+	transition: .3s;
+	opacity: 0;
+}
+.searcher li[id].in {
+	opacity: 1;
+}
 
 ul.tree ul {
 	margin-top: 10px;
@@ -127,8 +150,6 @@ i.fa-file {
 	cursor: col-resize;
 	color: black;
 	width: 6px;
-	/*border-left: 1px solid rgba(0,0,0,0.2);
-	border-right: 1px solid rgba(0,0,0,0.2);*/
 	background-color: white;
 	-webkit-transition: background .6s;
 	-moz-transition: background .6s;
@@ -202,7 +223,7 @@ label,
 	position: absolute;
 	padding-top: 0;
 	padding-bottom: 0;
-	height: 24px;
+	height: 30px;
 	top: 0;
 	left: 0;
 	width: calc(80% - 24px);
@@ -212,7 +233,19 @@ label,
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;
 }
-
+.input-group a {
+	position: absolute;
+	right: 0;
+	width: 20%;
+	border: 0;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	border-top-right-radius: 4px;
+	border-bottom-right-radius: 4px;
+}
+.popup-footer {
+	text-align: center;
+}
 ul input[type=checkbox] {
 	display: none;
 }
@@ -234,31 +267,38 @@ ul input[type=checkbox]:checked + label {
 	height: 100%;
 	transform-style: preserve-3d;
 }
-.input-group a {
-	position: absolute;
-	font-size: 14px;
-	line-height: 24px;
-	top: 0;
-	right: 0;
-	width: 20%;
-	border: 0;
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-	border-top-right-radius: 4px;
-	border-bottom-right-radius: 4px;
-}
 .button {
-	border-bottom: 1px solid #ccc;
-	line-height: 26px;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	border-radius: 3px;
-	border: 1px solid #dcdcdc;
+	background-color: #fff;
+	background-position: 50%;
+	background-repeat: no-repeat;
+	border: solid #a5a5a5;
+	border-bottom: none;
+	border-radius: 2px;
+    border-width: 0 1px 0 0;
+	box-sizing: border-box;
+	color: black;
+	cursor: pointer;
+	display: block;
+	float: left;
+	font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+	height: 30px;
+	line-height: 30px;
+	min-width: 30px;
+	pointer-events: visiblePainted;
+	pointer-events: auto;
+    position: relative;
 	text-align: center;
 	text-decoration: none;
-	min-width: 30px;
-	cursor: pointer;
-	display: inline-block;
+	
+	
+	
+	
+	/*border-bottom: 1px solid #ccc;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+	border: 1px solid #dcdcdc;
+	display: inline-block;*/
 }
 .button.disabled {
 	cursor: not-allowed;
@@ -281,8 +321,24 @@ ul input[type=checkbox]:checked + label {
 	right: 10px;
 }
 .button:hover {
-	opacity: 0.9;
+	background-color: #f4f4f4;
 }
+.button>span {
+	padding-bottom: 15%;
+}
+[step],
+.primary {
+	min-width: 100px;
+	margin-left: 15%;
+}
+.primary {
+	color: white;
+	background-color: blue;
+}
+.primary:hover {
+	background-color: yellow;
+}
+/*
 .files .writer .button {
 	background-color: rgba(255,255,255,.9);
 	color: black;
@@ -303,17 +359,17 @@ ul input[type=checkbox]:checked + label {
 }
 .files .searcher .button:hover {	
 	background-color: rgba(30,30,30,.8);
-}
+}*/
 .files .writer,
 .files .reader,
 .files .explorer,
 .files .searcher {
 	backface-visibility: hidden;
-	-webkit-transition: .6s;
-	-moz-transition: .6s;
-	-ms-transition: .6s;
-	-o-transition: .6s;
-	transition: .6s;
+	-webkit-transition: 1.2s;
+	-moz-transition: 1.2s;
+	-ms-transition: 1.2s;
+	-o-transition: 1.2s;
+	transition: 1.2s;
 	transform-style: preserve-3d;
 	position: absolute;
 	top: 0;
@@ -328,7 +384,6 @@ ul input[type=checkbox]:checked + label {
 	background-color: rgba(255,255,255,.5);
 }
 .flipper .reader {
-	background-color: rgba(0,0,0,.5);
 }
 .flipper .writer {
 	background-color: rgba(205,205,205,.9);
@@ -510,13 +565,11 @@ div.note.draw.dark {
 .hide {
 	display: none;
 }
-
-
-.form-group {}
 .form-group {
 	position: relative;
 	padding-top: 1.5rem;
-	margin-top: 0.5rem;
+	margin-top: 1.0rem;
+	margin-left: 15%;
 }
 .form-group label {
 	position: absolute;
@@ -527,10 +580,15 @@ div.note.draw.dark {
 	transition: all 0.2s ease-out;
 }
 .form-group input {
-	padding: 10px;
+	padding: 5px;
 	background-repeat: no-repeat;
 	background-position: right 1.5rem center;
 	background-size: 0.75rem;
+	transition: background-color .9s;
+	width: 70%;
+}
+.form-group input.highlight {
+	background-color: red;
 }
 .form-group input:not(:focus) + label {
 	opacity: 0;
@@ -554,24 +612,33 @@ div.note.draw.dark {
 
 
 
+.choices__list--multiple .choices__item {
+	background-color: orange;
+	border: 1px solid #cc8d1b;
+}
+.choices + label + div {
+	margin-top: -19px;
+}
+.choices__inner {
+	width: 70%;
+}
+.form-group.tags {
+	margin-top: 2.5rem;
+}
 
 ::-ms-clear {
 	display: none;
 }
 ::-webkit-input-placeholder {
-	color:red;
 	font-weight: bold;
 }
 ::-moz-placeholder {
-	color:red;
 	font-weight: bold;
 }
 ::-ms-placeholder {
-	color:red;
 	font-weight: bold;
 }
 ::placeholder {
-	color:red;
 	font-weight: bold;
 }
 

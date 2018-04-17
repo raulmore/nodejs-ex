@@ -2,27 +2,6 @@
 const URL = 'mongodb://localhost:27017/geodocuments';
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
-/*
-var URL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL;
-if (URL == null && process.env.DATABASE_SERVICE_NAME) {
-  var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
-      mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
-      mongoPort = process.env[mongoServiceName + '_SERVICE_PORT'],
-      mongoDatabase = process.env[mongoServiceName + '_DATABASE'],
-      mongoPassword = process.env[mongoServiceName + '_PASSWORD']
-      mongoUser = process.env[mongoServiceName + '_USER'];
-
-  if (mongoHost && mongoPort && mongoDatabase) {
-    URL = 'mongodb://';
-    if (mongoUser && mongoPassword) {
-      URL += mongoUser + ':' + mongoPassword + '@';
-    }
-    URL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
-  }
-}
-const MongoClient = require('mongodb').MongoClient;
-const ObjectId = require('mongodb').ObjectId;
-*/
 
 module.exports = {
 	create: (req, res, collname) => {
@@ -109,7 +88,7 @@ module.exports = {
 									tags: [],
 									docs: []
 								}
-								for (i = 0; documents && i < documents.length; i++) {
+								for (i = 0; i < documents.length; i++) {
 									for (j = 0; j < documents.length; j++) {
 										if (i != j && documents[j]._id.match(new RegExp('^'+documents[i]._id+'/'))) {
 											break;
@@ -140,7 +119,7 @@ module.exports = {
 										categories: true,
 										url: true
 									}).skip(skip4docs).limit(limit - geoJSON.tags.length).toArray((err, documents) => {
-										for (i = 0; documents && i < documents.length; i++) {
+										for (i = 0; i < documents.length; i++) {
 											geoJSON.docs.push(documents[i]);
 										}
 										db.collection(collname).find({
@@ -161,7 +140,7 @@ module.exports = {
 											}
 										}).limit(1000).toArray((err, documents) => {
 											db.close();
-											for (i = 0; documents && i < documents.length; i++) {
+											for (i = 0; i < documents.length; i++) {
 												geoJSON.features.push(documents[i]);
 											}
 											res.write(JSON.stringify(geoJSON));
@@ -188,7 +167,7 @@ module.exports = {
 										}
 									}).limit(1000).toArray((err, documents) => {
 										db.close();
-										for (i = 0; documents && i < documents.length; i++) {
+										for (i = 0; i < documents.length; i++) {
 											geoJSON.features.push(documents[i]);
 										}
 										res.write(JSON.stringify(geoJSON));
@@ -224,7 +203,7 @@ module.exports = {
 									type: 'FeatureCollection',
 									features: []
 								}
-								for (i = 0; documents && i < documents.length; i++) {
+								for (i = 0; i < documents.length; i++) {
 									geoJSON.features.push(documents[i]);
 								}
 								res.write(JSON.stringify(geoJSON));
@@ -242,11 +221,11 @@ module.exports = {
 			case 'categories':
 				MongoClient.connect(URL, (err, db) => {
 					db.collection('documents').aggregate([{
-						$unwind: '$categories'
-					}, {
 						$match: {
 							categories: new RegExp(text)
 						}
+					}, {
+						$unwind: '$categories'
 					}, {
 						$group: {
 							_id: '$categories'
@@ -270,7 +249,7 @@ module.exports = {
 				break;
 		}
 	},
-	update: (req, res, collname, id, key) => {
+	update: (req, res, collname, id) => {
 		var body = '';
 		req.on('data', (chunk) => {
 			body+= chunk;
@@ -287,8 +266,7 @@ module.exports = {
 				(obj && 
 					(MongoClient.connect(URL, (err, db) => {
 						db.collection(collname).replaceOne({
-							_id: new ObjectId(id),
-							key: key
+							_id: new ObjectId(id)
 						}, obj);
 						db.close();
 					}) || true) &&
@@ -305,12 +283,11 @@ module.exports = {
 			res.end();
 		});
 	},
-	delete: (req, res, collname, id, key) => {
+	delete: (req, res, collname, id) => {
 		id &&
 			(MongoClient.connect(URL, (err, db) => {
 				db.collection(collname).deleteOne({
-					_id: new ObjectId(id),
-					key: key
+					_id: new ObjectId(id)
 				});
 				db.close();
 			}) || true) &&

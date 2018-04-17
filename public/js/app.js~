@@ -94,30 +94,13 @@ $(document).on('ready', function () {
 				!documents[doc._id] &&
 					(documents[doc._id] = doc);
 				li = $resultLi.clone().on('click', function (ev) {
-					var $input = $('[type=checkbox]', this),
-						$buttons = $('.searcher .edit,.searcher .remove'),
-						checked = $input.prop('checked');
 					$('.result', this.parentNode).removeClass('active').removeClass('light');
 					$(this).addClass('active'+(light ? ' light' : ''));
-					$('[type=checkbox]', this.parentNode).prop('checked', false);
-					$input.prop('checked', !checked) &&
-					$buttons.prop('disabled', checked);
-					!checked &&
-						$buttons.removeClass('disabled')
-					||
-						$buttons.addClass('disabled');
 					featureCollection2featureGroup({
 						features: [documents[this.id]]
 					}, docsFeatures);
 				}).appendTo($resultLi.parent()).removeClass('hide')[0];
 				li.id = doc._id;
-				li.oncontextmenu = function (ev) {
-					var node;
-					ev.preventDefault();
-					ev.stopPropagation();
-					tree.nodeContextMenu(ev, node = tree.createNode('', false, '', null, this.id, 'ctx4file'));
-					tree.removeNode(node);
-				}
 				$('span', li).html(doc.name);
 				$('a', li).html(doc.url).attr('href', doc.url.indexOf('http') === 0 ? doc.url : 'http://'+doc.url);
 				for (j = 0; j <  doc.categories.length; j++) {
@@ -177,7 +160,6 @@ $(document).on('ready', function () {
 								featureCollection2featureGroup({
 									features: [documents[node.tag]]
 								}, docsFeatures);
-								$('.searcher .edit,.searcher .remove').prop('disabled', false).removeClass('disabled');
 							}
 							else {
 								category = '/'+node.text;
@@ -231,78 +213,14 @@ $(document).on('ready', function () {
 				}
 			})*/
 		},
-		shape = {
-			shapeOptions: {
-				color: '#f50'
-			}
-		},
-		draw = new L.Control.Draw({
-			draw: {
-				polyline: false,
-				rectangle: false,
-				marker: false,
-				polygon: shape,
-				circle: shape
-			},
-			edit: {
-				featureGroup: docFeature,
-				remove: false
-			}
-		}),
-		$draw = $(draw.getContainer()),
 		flipX = function () {
 			$flipperXDiv.hasClass('flip') &&
 				setTimeout(function () {
 					$('.flipper.Y.flip>.explorer,.flipper.Y:not(.flip)>.searcher').show();
-				}, 1200)
+				}, 2000)
 			||
 				$('.flipper.Y.flip>.explorer,.flipper.Y:not(.flip)>.searcher').hide();
 			$flipperXDiv.toggleClass('flip');
-		},
-		setForm = function (doc) {
-			var choices4tags,
-				choices4subtags;
-			tagsChoices.clearStore();
-			subtagsChoices.clearStore();
-			if (doc) {
-				var i, j, k, tag, subtag,
-					tags = [], subtags = [];
-				titleInput.value = doc.name;
-				urlInput.value = doc.url;
-				for (i = 0; i < doc.categories.length; i++) {
-					tag = doc.categories[i].split('/');
-					tag.length > 1 && tags.indexOf(tag[1]) < 0 &&
-						tags.push(tag[1]);
-					for (j = 2; j < tag.length; j++) {
-						subtag = tag[1];
-						for (k = 2; k <= j; k++) {
-							subtag+= '/'+tag[k];
-						}
-						subtags.indexOf(subtag) < 0 &&
-							subtags.push(subtag);
-					}
-				}
-				choices4tags = [];
-				choices4subtags = [];
-				for (i = 0; i < choices.length; i++) {
-					tags.indexOf(choices[i]._id) < 0 &&
-						choices4tags.push(choices[i]);
-					subtags.indexOf(choices[i]._id) < 0 &&
-						choices4subtags.push(choices[i]);
-				}
-				tagsChoices.setValue(tags);
-				subtagsChoices.setValue(subtags);
-				doc_id = doc._id;
-			}
-			else {
-				doc_id = titleInput.value = urlInput.value = null;
-				choices4tags = choices;
-				choices4subtags = choices;
-			}
-			tagsChoices.setChoices(choices4tags, '_id', '_id');
-			subtagsChoices.setChoices(choices4subtags, '_id', '_id');
-			updateParentTagChoices();
-			return true;
 		},
 		autoSearch = function () {
 			var currentBounds = map.getBounds();			
@@ -315,24 +233,6 @@ $(document).on('ready', function () {
 				tree.createNode(dict['Loading'] ? dict['Loading'] : 'Loading', false, 'fa fa-spinner fa-spin', root, null) &&
 				(tree.expandNode(root) || true) &&
 				getDocuments(lastBounds, null, 0, 0, setTree);
-		},
-		removeDocument = function (node) {
-			tiModal.create($('.confirm-dialog').html().replace('{name}', documents[node.tag].name), {
-				events: {
-					'click .cancel': tiModal.fadeOut,
-					'click .ok': function () {
-						$.ajax({
-							type: 'DELETE',
-							url: '/api/documents/'+node.tag+'?key='+KEY,
-							dataType: 'json',
-							success: function () {
-								node.removeNode();
-							}
-						});
-						tiModal.fadeOut();
-					}
-				}
-			}).show();
 		},
 		autoSearchClock = setInterval(autoSearch, 1000),
 		light = true, lang, doc_id = null, wF = mobile ? 1 : 0.4,
@@ -352,34 +252,7 @@ $(document).on('ready', function () {
 					||
 						layers[i].setOpacity(0.4));
 			}
-		},
-		urlInput = $('[name=url]')[0],
-		titleInput = $('[name=title]')[0],
-		dateInput = $('[name=date]')[0],
-		typeoflinkInput = $('[name=typeoflink]').on('change', function () {
-			this.value == '1' &&
-				(urlInput.disabled = true) &&
-				explorer.choose()
-			||
-				(urlInput.disabled = false);
-		}),
-		checkTyping = function () {
-			this.value == "0" &&
-				(this.checked = true);
-		},
-		$subtags = $('[name=tags][choices-child]'),
-		$tagsParent = $('[name=parentTags]').on('choice', function () {
-			subtagsChoices.enable();
-		}).on('choice', function (ev) {
-			var regex = new RegExp('(^|/)'+ev.detail.choice.value+'/'),
-				values = subtagsChoices.getValue(),
-				i;
-			for (i = 0; i < values.length; i++) {
-				values[i].value.match(regex) &&
-					subtagsChoices.highlightItem(values[i]);
-			}
-		}),
-		tagsChoices, subtagsChoices, parentTagsChoices;
+		};
 	map.timeDimension.on('timeload', filterByTime);
 	map.timeDimensionControl._toggleDateUTC();
 	lastBounds._northEast.lng = lastBounds._southWest.lng + (lastBounds._northEast.lng - lastBounds._southWest.lng)*wF;
@@ -412,28 +285,6 @@ $(document).on('ready', function () {
 							this.setAttribute(attrs[i], txt);
 					}
 				});
-				L.drawLocal.draw.handlers.simpleshape.tooltip.end = dict['Release mouse to finish drawing'] ? dict['Release mouse to finish drawing'] : 'Release mouse to finish drawing';
-				L.drawLocal.draw.handlers.circle.radius = dict['Radius'] ? dict['Radius'] : 'Radius';
-				L.drawLocal.draw.handlers.circle.tooltip.start = dict['Click and drag to draw circle'] ? dict['Click and drag to draw circle'] : 'Click and drag to draw circle';
-				L.drawLocal.draw.handlers.polygon.tooltip.start = dict['Click to start drawing shape'] ? dict['Click to start drawing shape'] : 'Click to start drawing shape';
-				L.drawLocal.draw.handlers.polygon.tooltip.end = dict['Click first point to close this shape'] ? dict['Click first point to close this shape'] : 'Click first point to close this shape';
-				L.drawLocal.draw.handlers.polygon.tooltip.cont = dict['Click to continue drawing shape'] ? dict['Click to continue drawing shape'] : 'Click to continue drawing shape';
-				L.drawLocal.draw.toolbar.buttons.circle = dict['Draw a circular area'] ? dict['Draw a circular area'] : 'Draw a circular area';
-				L.drawLocal.draw.toolbar.buttons.polygon = dict['Draw a polygonal area'] ? dict['Draw a polygonal area'] : 'Draw a polygonal area';
-				L.drawLocal.draw.toolbar.finish.text = dict['Finish'] ? dict['Finish'] : 'Finish';
-				L.drawLocal.draw.toolbar.finish.title = dict['Finish drawing'] ? dict['Finish drawing'] : 'Finish drawing';
-				L.drawLocal.draw.toolbar.undo.text = dict['Delete last point'] ? dict['Delete last point'] : 'Delete last point';
-				L.drawLocal.draw.toolbar.undo.title = dict['Delete last point drawn'] ? dict['Delete last point drawn'] : 'Delete last point drawn';
-				L.drawLocal.draw.toolbar.actions.text = dict['Cancel'] ? dict['Cancel'] : 'Cancel';
-				L.drawLocal.draw.toolbar.actions.title = dict['Cancel drawing'] ? dict['Cancel drawing'] : 'Cancel drawing';
-				L.drawLocal.edit.toolbar.buttons.edit = dict['Edit geometry'] ? dict['Edit geometry'] : 'Edit geometry';
-				L.drawLocal.edit.toolbar.buttons.editDisabled = dict['No geometries to edit'] ? dict['No geometries to edit'] : 'No geometries to edit';
-				L.drawLocal.edit.toolbar.actions.save.text = dict['Accept'] ? dict['Accept'] : 'Accept';
-				L.drawLocal.edit.toolbar.actions.save.title = dict['Keep changes'] ? dict['Keep changes'] : 'Keep changes';
-				L.drawLocal.edit.toolbar.actions.cancel.text = dict['Cancel'] ? dict['Cancel'] : 'Cancel';
-				L.drawLocal.edit.toolbar.actions.cancel.title = dict['Discard changes'] ? dict['Discard changes'] : 'Discard changes';
-				L.drawLocal.edit.handlers.edit.tooltip.text = dict['Drag handles or marker to edit shape'] ? dict['Drag handles or marker to edit shape'] : 'Drag handles or marker to edit shape';
-				L.drawLocal.edit.handlers.edit.tooltip.subtext = dict['Click cancel to undo changes'] ? dict['Click cancel to undo changes'] : 'Click cancel to undo changes';
 				map.addControl(searchControl = new GeoSearch.GeoSearchControl({
 					searchLabel: dict['Enter address'] ? dict['Enter address'] : 'Enter address'
 				}));
@@ -458,28 +309,6 @@ $(document).on('ready', function () {
 						initOpen: false
 					}).setContent($('.search-dialog').html()).addTo(map);
 				dialog.freeze();
-				datepicker(dateInput, {
-					customMonths: dict['_months'] ? dict['_months'] : null,
-					customDays: dict['_days'] ? dict['_days'] : null,
-					overlayPlaceholder: dict['Enter a 4-digit year'] ? dict['Enter a 4-digit year'] : 'Enter a 4-digit year',
-					overlayButton: dict['Accept'] ? dict['Accept'] : 'Accept'
-				});
-				var options = {
-					loadingText: dict['Loading'] ? dict['Loading'] : 'Loading',
-					noResultsText: dict['No results found'] ? dict['No results found'] : 'No results found',
-					noChoicesText: dict['No categories to choose from'] ? dict['No categories to choose from'] : 'No categories to choose from',
-					itemSelectText: dict['Press to select'] ? dict['Press to select'] : 'Press to select'
-				};
-				parentTagsChoices = new Choices($tagsParent[0], Object.assign({
-					searchResultLimit: 100
-				}, options));
-				tagsChoices = new Choices('[name=tags]:not([choices-child])', Object.assign(options, {
-					editItems: true,
-					maxItemCount: 50,
-					searchResultLimit: 11,
-					removeItemButton: true
-				}));
-				subtagsChoices = new Choices('[name=tags][choices-child]', options).disable();
 				dict['All categories'] &&
 					root.setText(dict['All categories']);
 				window.dict = dict;
@@ -511,21 +340,6 @@ $(document).on('ready', function () {
 				initOpen: false
 			}).setContent($('.search-dialog').html()).addTo(map);
 		dialog.freeze();
-		datepicker(dateInput);
-		var options = {
-			loadingText: 'Loading',
-			noChoicesText: 'No categories to choose from'
-		};
-		parentTagsChoices = new Choices($tagsParent[0], Object.assign({
-			searchResultLimit: 100
-		}, options));
-		tagsChoices = new Choices('[name=tags]:not([choices-child])', Object.assign(options, {
-			editItems: true,
-			maxItemCount: 50,
-			searchResultLimit: 11,
-			removeItemButton: true
-		}));
-		subtagsChoices = new Choices('[name=tags][choices-child]', options).disable();
 	}
 	L.control.layers({
 		'Terrain': googleTerrain,
@@ -537,19 +351,8 @@ $(document).on('ready', function () {
 	}, {
 		'position': 'topleft'
 	}).addTo(map);
-	map.on('draw:created', function (ev) {
-		ev.layer.options.color = '#ff0';
-		docFeature.addLayer(ev.layer);
-		$save.show();
-	}).on('draw:drawstart', function () {
-		docFeature.clearLayers();
-		$save.hide();
-	}).on('geosearch/showlocation', function () {
-		var layer = searchControl.markers.getLayers()[0];
-		layer.options.icon.options.iconUrl = 'marker-icon-red.png';
-		docFeature.clearLayers();
-		docFeature.addLayer(layer);
-		$save.show();
+	map.on('geosearch/showlocation', function () {
+		searchControl.markers.getLayers()[0].options.icon.options.iconUrl = 'marker-icon-red.png';
 	});
 	var $body = $('body'),
 		$splitDiv = $('div.split', $body),
@@ -557,10 +360,6 @@ $(document).on('ready', function () {
 		$flipperXDiv = $('div.X.flipper', $filesDiv),
 		$flipperYDiv = $('div.Y.flipper', $filesDiv),
 		$switchYA = $('a.Y.switch'),
-		$switchX = $('.X.switch'),
-		$steps = $('[step]'),
-		$form = $('form', $steps.parent()),
-		$save = $('[save]', $steps.parent()).hide(),
 		$searchInput = $('div.searcher form input'),
 		$resultLi = $('li.result'),
 		$nodocsLi = $('li:not([skip]):not(.result)', $resultLi.parent()),
@@ -574,31 +373,7 @@ $(document).on('ready', function () {
 			el.setAttribute('skip', skip);
 			getDocuments(lastBounds, $searchInput.val(), 0, skip, setList, true);
 		};
-	$switchX.on('click', function () {
-		this.className.indexOf('edit') > -1 &&
-			(this.parentNode.className.indexOf('searcher') > -1 &&
-				setForm(documents[$(':checked', $resultLi.parent()).parent()[0].id])
-			||
-				setForm(documents[tree.selectedNode.tag]))
-		||
-			this.className.indexOf('new') > -1 &&
-				setForm(null);
-		flipX();
-	});
-	$('.remove').on('click', function () {
-		if (this.parentNode.className.indexOf('searcher') > -1) {
-			var $li = $(':checked', $resultLi.parent()).parent();
-			removeDocument({
-				tag: $li[0].id,
-				removeNode: function () {
-					$li.remove();
-				}
-			});
-		}
-		else {
-			removeDocument(tree.selectedNode);
-		}
-	});
+	$('.X.switch').on('click', flipX);
 	$skipLi.on('click', function () {
 		moreDocuments(this);
 	});
@@ -622,12 +397,6 @@ $(document).on('ready', function () {
 		$skipLi.attr('skip', 0);
 		getDocuments(lastBounds, $searchInput.val(), 0, 0, setList, true);
 	});
-	$('.new').on('click', function () {
-		doc_id = null;
-	});
-	$('.edit').on('click', function () {
-		doc_id = tree.selectedNode.tag;
-	});
 	$('#block-input').on('change', function () {
 		var title = this.parentNode.title;
 		this.parentNode.title = this.parentNode.getAttribute('data-title');
@@ -639,101 +408,6 @@ $(document).on('ready', function () {
 	});
 	$switchYA.on('click', function () {
 		$flipperYDiv.toggleClass('flip');
-	});
-	$steps.on('click', function () {
-		var $inputs = $('[required]:invalid', $form);
-		if ($inputs.length > 0) {
-			$inputs.addClass('highlight');
-			setTimeout(function () {
-				$inputs.removeClass('highlight');
-			}, 900);
-			return;
-		}
-		$filesDiv[0].style.left = $splitDiv[0].style.left = '';
-		$filesDiv.toggleClass('inmap');
-		$splitDiv.toggleClass('inmap');
-		this.getAttribute('step') == 'map' &&
-			$form.hide() &&
-			$switchX.hide() &&
-			map.addControl(draw) &&
-			map.removeLayer(docsFeatures) &&
-			$('.note').addClass('visible') &&
-			$('[aria-haspopup]').on('mouseover', function () {
-				$('div.note').hide();
-			}).on('mouseleave', function () {
-				$('div.note').show();
-			}) &&
-			(doc_id &&
-				$save.show() &&
-				featureCollection2featureGroup({
-					features: [documents[doc_id]]
-				}, docFeature)
-			||
-				true)
-		||
-			$save.hide() &&
-			$form.show() &&
-			$switchX.show() &&
-			map.removeControl(draw) &&
-			map.addLayer(docsFeatures) &&
-			$('.note').remove() && 
-			$('[aria-haspopup]').off('mouseover').off('mouseleave') &&
-			docFeature.clearLayers();
-		$steps.toggleClass('hide');
-	});
-	$save.on('click', function () {
-		var feature = featureGroup2feature(docFeature),
-			tags = tagsChoices.getValue(true).concat(subtagsChoices.getValue(true)),
-			categories = [],
-			regex, i, j;
-		for (i = 0; i < tags.length; i++) {
-			regex = new RegExp('(^|/)'+tags[i]+'/');
-			for (j = 0; j < tags.length; j++) {
-				if (i != j && tags[j].match(regex)) {
-					break;
-				}
-			}
-			j == tags.length &&
-				categories.push('/'+tags[i]);
-		}
-		!categories.length &&
-			categories.push('');
-		feature.name = titleInput.value;
-		feature.key = KEY;
-		feature.url = urlInput.value;
-		feature.properties = {
-			time: new Date(dateInput.value).getTime()
-		}
-		feature.categories = categories;
-		$.ajax({
-			type: doc_id ? 'PUT' : 'POST',
-			url: 'api/documents/'+(doc_id ? doc_id : '')+'?key='+KEY,
-			dataType: 'json',
-			contentType: 'application/json; charset=UTF-8', 
-			data: JSON.stringify(feature),
-			beforeSend: function () {
-				$save.addClass('disabled');
-			},
-			success: function (data) {
-				$save.removeClass('disabled');
-				docFeature.clearLayers();
-				tree.selectNode(root);
-				tree.createNode(dict['Loading'] ? dict['Loading'] : 'Loading', false, 'fa fa-spinner fa-spin', root, null);
-				tree.expandNode(root);
-				documents[data.id] = data;
-				getDocuments(lastBounds, null, 0, 0, setTree);
-				autoSearchClock = setInterval(autoSearch, 1000);
-				map.addLayer(docsFeatures) &&
-				map.removeControl(draw) &&
-				$('.note').remove() && 
-				$('[aria-haspopup]').off('mouseover').off('mouseleave');
-				tiModal.create($('.registered-dialog').html().replace('{name}', data.name), {
-					events: {
-						'click .ok': tiModal.fadeOut
-					}
-				}).show();
-			}
-		});
 	});
 	map.on('baselayerchange', function () {
 		light = map.hasLayer(googleSatellite) || map.hasLayer(googleHybrid);
@@ -747,136 +421,8 @@ $(document).on('ready', function () {
 			time: map.timeDimension.getCurrentTime()
 		});
 	});
-	$('span.note.search i').on('click', function () {
-		$('.note.search').remove();
-	});
-	$('span.note.draw i').on('click', function () {
-		$('.note.draw').remove();
-	});
-	$(map.getContainer()).hasClass('leaflet-touch') &&
-		$('div.note').addClass('touch');
-	$('.leaflet-control-attribution').hide();
-
-	var renameSubtag = function (ev) {
-			var values = subtagsChoices.getValue(true), value, i;
-			for (i = 0; i < values.length; i++) {
-				if (values[i] == ev.detail.value && (value = parentTagsChoices.getValue(true))) {
-					values[i] = value+'/'+values[i];
-					break;
-				}
-			}
-			i < values.length && 
-				setTimeout(function () {
-					$subtags.off('addItem', renameSubtag).off('removeItem', removeChildrenTags);
-					subtagsChoices.removeItemsByValue(ev.detail.value);
-					$subtags.on('removeItem', removeChildrenTags);
-					subtagsChoices.setValue([values[i]]);
-					$subtags.on('addItem', renameSubtag);
-				}, 300);
-		},
-		updateParentTagChoices = function () {
-			var values = tagsChoices.getValue(true).concat(subtagsChoices.getValue(true)),
-				value = parentTagsChoices.getValue(true),
-				i;
-			value != null && values.indexOf(value) < 0 &&
-				subtagsChoices.hideDropdown() &&
-				resetParentTag();
-			for (i = 0; i < values.length; i++) {
-				values[i] = {
-					_id: values[i]
-				};
-			}
-			parentTagsChoices.setChoices(values, '_id', '_id', true);
-		},
-		resetParentTag = function () {
-			parentTagsChoices.removeItemsByValue(parentTagsChoices.getValue(true)) &&
-			subtagsChoices.disable();
-		},
-		removeChildrenTags = function (ev) {
-			var regex = new RegExp('(^|/)'+ev.detail.value+'/'),
-				values = subtagsChoices.getValue(true),
-				i;
-			for (i = 0; i < values.length; i++) {
-				values[i].match(regex) &&
-					subtagsChoices.removeItemsByValue(values[i]);
-			}
-		},
-		choices;		
-	$.ajax({
-		type: 'GET',
-		url: '/api/categories/',
-		dataType: 'json',
-		success: function (data) {
-			choices = [];
-			for (var i = 0; i < data.length; i++) {
-				data[i]._id &&
-					choices.push({
-						_id: data[i]._id.slice(1)
-					});
-			}
-		}
-	});
-	$('[name=tags][choices-child]').on('addItem', renameSubtag).on('hideDropdown', resetParentTag);
-	$('[name=tags]').on('search', function () {
-		var $this = $(this),
-			text = $this.siblings('input').val();
-		$.ajax({
-			type: 'GET',
-			url: '/api/categories/bbox/'+text,
-			dataType: 'json',
-			success: function (data) {
-				for (var i = 0; i < data.length; i++) {
-					data[i]._id = data[i]._id.slice(1);
-				}
-				data.unshift({
-					_id: text
-				});
-				($this.attr('choices-child') ? subtagsChoices : tagsChoices).setChoices(data, '_id', '_id', true);
-			}
-		});
-	}).on('change', updateParentTagChoices).on('removeItem', removeChildrenTags);
-	
-	window.tree = createTree('tree-container', 'transparent', {
-		'ctx4folder': {
-			elements: [{
-				text: 'Create document',
-				icon: 'lib/aimaraJS/images/add.png',
-				action: function (node) {
-					var category = node != root ? '/'+node.text : '';
-					while ((node = node.parent) && node.text && node.parent.text) {
-						category = '/'+node.text+category;
-					}
-					setForm({
-						name: '',
-						url: '',
-						categories: [category]
-					});
-					flipX();
-				}
-			}, {
-				text: 'Remove documents',
-				icon: 'lib/aimaraJS/images/delete.png',
-				action: function (node) {
-					node.removeChildNodes();
-				}
-			}]
-		},
-		'ctx4file': {
-			elements: [{
-				text: 'Edit document',
-				icon: 'lib/aimaraJS/images/edit.png',
-				action: function (node) {
-					tree.selectNode(node);
-					setForm(documents[node.tag]);
-					flipX();
-				}
-			}, {
-				text: 'Remove document',
-				icon: 'lib/aimaraJS/images/delete.png',
-				action: removeDocument
-			}]
-		}
-	});
+	$('.leaflet-control-attribution').hide();		
+	window.tree = createTree('tree-container', 'transparent');
 	root = tree.createNode('All categories', true, 'fa fa-folder-open', null, null, 'ctx4folder');
 	tree.nodeBeforeOpenEvent = function (node) {
 		node.setIcon('fa fa-folder-open');
@@ -895,68 +441,16 @@ $(document).on('ready', function () {
 	}
 	tree.selectNode(root);
 	getDocuments(lastBounds, null, 0, 0, setTree);
-
 	$('div.searcher ul').on('scroll', function (ev) {
 		var li = $('div.searcher ul li[skip]')[0];
 		window.pageXOffset + window.innerHeight > li.offsetTop + li.clientHeight - 20 && !$skipSpan.hasClass('hide') &&
 			moreDocuments(li);
 	});
-
-	var explorer = window.Kloudless.explorer({
-		app_id: 'iCZ_ICMy43H0NSoz0QbLvmyjzCHf2frAOPaBfWVgh9_vrFIM',
-		persist: 'local',
-		services: ['all'],
-		display_backdrop: true,
-		create_folder: true,
-		retrieve_token: false,
-		tokens: [],
-		multiselect: false,
-		link: true,
-		direct_link: true,
-		types: ['all'],
-	}).on('success', function (file) {
-		file.length &&
-			(urlInput.value = file[0].link);
-	}).on('cancel', function () {
-		typeoflinkInput.each(checkTyping);
-		urlInput.disabled = false;
-	});
-	typeoflinkInput.each(checkTyping);
 });
-
-function featureGroup2feature(featureGroup) {
-	var layers;
-	if ((layers = featureGroup.getLayers()).length) {
-		var feature;
-		if (layers[0].getRadius) {
-			var bounds = layers[0].getBounds(),
-				north = bounds.getNorth(),
-				south = bounds.getSouth(),
-				west = bounds.getWest(),
-				east = bounds.getEast();
-			feature = {
-				type: 'Feature',
-				geometry: {
-					type: 'Polygon',
-					coordinates: [[[west, south], [east, south], [east, north], [west, north], [west, south]]],
-				}
-			};
-			layers[0].options.radius = layers[0].getRadius();
-		}
-		else {
-			feature = layers[0].toGeoJSON();
-		}
-		feature.style = layers[0].options;
-		return feature;
-	}
-	return false;
-}
 
 function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 	!append &&
 		featureGroup.clearLayers();
-	typeof window.light == 'undefined' &&
-		(window.light = true);
 	for (var feature, coords, options, layer, i = 0; i < geoJSON.features.length; i++) {
 		feature = geoJSON.features[i];
 		coords = feature.geometry.coordinates;
@@ -1017,17 +511,13 @@ function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 				i == n &&
 					(n > 0 && node.childNodes[n - 1].tag === 0 &&
 						(tree.removeNode(node.childNodes[n - 1]) || true) &&
-						(node = tree.createNode(doc.name, false, 'fa fa-file', node, doc._id, 'ctx4file'))/* &&
-						(tree.createNode(dict['More'] ? dict['More'] : 'More', false, 'fa fa-plus fg-green', node.parent, 0).elementLi.childNodes[1].onclick = onclick)*/
+						(node = tree.createNode(doc.name, false, 'fa fa-file', node, doc._id, 'ctx4file'))
 					||
 						(node = tree.createNode(doc.name, false, 'fa fa-file', node, doc._id, 'ctx4file')));
 				for (i = 0; i < nodes.length; i++) {
 					tree.expandNode(nodes[i]);
 				}
 				tree.selectNode(node);
-				$('.explorer .edit,.explorer .remove').prop('disabled', false).removeClass('disabled');
-				$('input', $('div.searcher ul')).prop('checked', false);
-				$('input', $('#'+doc._id)).prop('checked', true);
 			}) &&
 			(feature.properties && feature.properties.time &&
 				(layer.time = feature.properties.time)

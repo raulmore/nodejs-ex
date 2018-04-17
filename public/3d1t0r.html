@@ -17,7 +17,7 @@
 		<link rel="stylesheet" href="css/3d1t0r.css">
 	</head>
 	<body>
-		<div id="map" class="sidebar-map"></div>
+		<div id="map" class="map"></div>
 		<div class="split">
 			<span>
 				<i class="fa fa-circle"></i>
@@ -37,12 +37,8 @@
 							<label for="title-input" class="ln-txt">Title of document</label>
 						</div>
 						<div class="form-group">
-							<input id="url-input" name="url" type="url" placeholder="URL" pattern="^(https?://)?([a-zA-Z0-9]([a-zA-ZäöüÄÖÜ0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" required />
+							<input id="url-input" name="url" type="url" placeholder="URL" pattern="^(https?://)?([a-zA-Z0-9]([a-zA-ZäöüÄÖÜ0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(/[a-zA-Z0-9\-_]*)*(\?([a-zA-Z0-9\-_]+(=[a-zA-Z0-9\-_]*)?(\x26[a-zA-Z0-9\-_]+(=[a-zA-Z0-9\-_]*)?)*)?)?$" required />
 							<label for="url-input" class="ln-txt">You must enter a valid url (http or https)</label>
-						</div>
-						<div class="form-group">
-							<input id="date-input" name="date" class="datepicker-here" placeholder="Date" required />
-							<label for="date-input" class="ln-txt">Date</label>
 						</div>
 						<div class="radio">
 							<input id="typeit-input" class="hide" type="radio" name="typeoflink" value=0 />
@@ -51,29 +47,31 @@
 							<label for="explore-input" class="ln-txt">Explore my cloud</label>
 						</div>
 						<div class="form-group">
-							<select id="tags-select" name="tags" class="form-control ln-txt" placeholder="Enter something" multiple></select>
+							<input id="date-input" name="date" class="ln-txt datepicker-here" placeholder="Semantic date" required />
+							<label for="date-input" class="ln-txt">Semantic date of document (not that of the computer file)</label>
+						</div>
+						<div class="form-group tags">
+							<select id="tags-select" name="tags" class="form-control ln-txt" multiple></select>
 							<label for="tags-select" class="ln-txt">Categories (min. 3 chars)</label>
 						</div>
-						<div>
-							<label>
-								<span class="ln-txt">Sub-categories (min. 3 chars)</span>
-								<select name="tags" choices-child="true" class="form-control ln-txt" placeholder="Enter something" multiple></select>
-							</label>
-							<div class="w50">
+						<div class="form-group tags">
+							<select  id="subtags-select" name="tags" choices-child="true" class="form-control ln-txt" multiple></select>
+							<label for="subtags-select" class="ln-txt">Sub-categories (min. 3 chars)</label>
+							<div>
 								<span class="ln-txt">Parent category</span>
-								<select name="parentTags" class="form-control ln-txt" placeholder="Enter something"></select>
+								<select name="parentTags" class="form-control ln-txt"></select>
 							</div>
 						</div>
 					</form>
-					<a href="#" class="button" step="map">
+					<a class="button" step="map">
 						<span class="ln-txt">Next</span>
 						<i class="fa fa-step-forward"></i>
 					</a>
-					<a href="#" class="button hide" step="tree">
+					<a href="#" class="button hide" step="files">
 						<i class="fa fa-step-backward"></i>
 						<span class="ln-txt">Back</span>
 					</a>
-					<a href="#" class="button" save>
+					<a href="#" class="button primary" save>
 						<i class="fa fa-save"></i>
 						<span class="ln-txt">Save</span>
 					</a>
@@ -125,7 +123,7 @@
 						</a>
 						<form>
 							<div class="input-group">
-								<input name="text" class="form-control ln-txt" placeholder="Type something to filter documents..."/>
+								<input name="text" class="form-control ln-txt" placeholder="Type for filtering documents..."/>
 								<a href="#" class="button" search>
 									<i class="fa fa-search fa-fw"></i>
 								</a>
@@ -141,13 +139,18 @@
 								<br/>
 								<small></small>
 							</li>
-							<li clasS="hide" skip=0 >
+							<li class="hide" skip=0 >
 								<span class="hide">
 									<small>---</small>
 									<small class="ln-txt">More</small>
 									<small>---</small>
 								</span>
 								<i class="hide fa fa-spinner fa-spin"></i>
+							</li>
+							<li class="hide">
+								<span class>
+									<small class="ln-txt">No documents</small>
+								</span>
 							</li>
 						</ul>
 					</div>

@@ -4,19 +4,39 @@ window.documents = {};
 window.tree = null;
 window.root = null;
 window.dict = {};
+window.light = true;
 window.LIMIT = 4;
-
+window.KEY = 'public';
+if (document.location.href.indexOf('?') > -1) {
+	for (var params = document.location.href.split('?')[1].split('&'), i = 0; i < params.length && KEY == 'public'; i++) {
+		params[i].indexOf('=') > -1 && (param = params[i].split('=')) && param[0].toLowerCase() == 'key' &&
+			(window.KEY = param[1].split('#')[0]);
+	}
+}
 $(document).on('ready', function () {
 	window.map = L.map('map', {
 		center: [51.50, -0.09],
 		zoom: 13,
 		timeDimension: true,
 		timeDimensionOptions: {
-			timeInterval: '2014-09-30/2014-10-30',
+			timeInterval: new Date(new Date().getTime() - 15*365*24*60*60*1000).toISOString()+'/'+new Date().toISOString(),
 			period: 'PT1H'
 		},
-		timeDimensionControl: true
-	});	
+		timeDimensionControl: true,
+		timeDimensionControlOptions: {
+			minSpeed: 1,
+			speedStep: 1,
+			limitSliders: true,
+			playReverseButton: true,
+			loopbutton: true,
+			maxSpeed: 100
+		}
+	});
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(function(position) {
+			window.map.panTo(new L.LatLng(position.coords.latitude, position.coords.longitude));
+		});
+	}
 	var googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
 		maxZoom: 20,
 		subdomains:['mt0','mt1','mt2','mt3']
@@ -65,23 +85,27 @@ $(document).on('ready', function () {
 			data.features.length == LIMIT && 
 				$skipLi.removeClass('hide') && 
 				$skipSpan.removeClass('hide');
+			data.features.length &&
+				$nodocsLi.addClass('hide')
+			||
+				$nodocsLi.removeClass('hide');
 			for (var i = 0, j, doc, tag, li; i < data.features.length; i++) {
 				doc = data.features[i];
 				!documents[doc._id] &&
 					(documents[doc._id] = doc);
 				li = $resultLi.clone().on('click', function (ev) {
 					var $input = $('[type=checkbox]', this),
+						$buttons = $('.searcher .edit,.searcher .remove'),
 						checked = $input.prop('checked');
+					$('.result', this.parentNode).removeClass('active').removeClass('light');
+					$(this).addClass('active'+(light ? ' light' : ''));
 					$('[type=checkbox]', this.parentNode).prop('checked', false);
 					$input.prop('checked', !checked) &&
-					$editButton.prop('disabled', checked) &&
-					$removeButton.prop('disabled', checked);
+					$buttons.prop('disabled', checked);
 					!checked &&
-						$editButton.removeClass('disabled') &&
-						$removeButton.removeClass('disabled')
+						$buttons.removeClass('disabled')
 					||
-						$editButton.addClass('disabled') &&
-						$removeButton.addClass('disabled');
+						$buttons.addClass('disabled');
 					featureCollection2featureGroup({
 						features: [documents[this.id]]
 					}, docsFeatures);
@@ -104,6 +128,9 @@ $(document).on('ready', function () {
 				$('small', li).html(doc.categories.join(', '));
 			}
 			$skipLi.remove().appendTo($resultLi.parent());
+			setTimeout(function() {
+				$('li[id]', $resultLi.parent()).addClass('in');
+			});
 		},
 		setTree = function (data, text, skip4docs, skip4tags) {
 			var i, j, n = 0,
@@ -115,7 +142,7 @@ $(document).on('ready', function () {
 			||
 				(nodes = []) &&	
 				tree.selectedNode.removeChildNodes();
-			featureCollection2featureGroup(data, docsFeatures, skip4tags || skip4docs);
+			featureCollection2featureGroup(data, docsFeatures);
 			filterByTime({
 				time: map.timeDimension.getCurrentTime()
 			});
@@ -150,10 +177,7 @@ $(document).on('ready', function () {
 								featureCollection2featureGroup({
 									features: [documents[node.tag]]
 								}, docsFeatures);
-								$editButton.prop('disabled', false) &&
-								$removeButton.prop('disabled', false);
-								$editButton.removeClass('disabled') &&
-								$removeButton.removeClass('disabled');
+								$('.searcher .edit,.searcher .remove').prop('disabled', false).removeClass('disabled');
 							}
 							else {
 								category = '/'+node.text;
@@ -202,8 +226,8 @@ $(document).on('ready', function () {
 			})/*,
 			'here': new GeoSearch.HEREProvider({
 				params: {
-					app_id: 'akTstJgjVI1xVhTWhIe9',
-					app_code: 'bApmqgyXq4AnGZPips-b2A'
+					app_id: 'oqJ5vQkGwzCLiCusZouy',
+					app_code: 'PW2vmIlVy0twOM41Q4KEhw'
 				}
 			})*/
 		},
@@ -229,13 +253,15 @@ $(document).on('ready', function () {
 		flipX = function () {
 			$flipperXDiv.hasClass('flip') &&
 				setTimeout(function () {
-					$('.flipper.Y>div').show()
-				}, 300)
+					$('.flipper.Y.flip>.explorer,.flipper.Y:not(.flip)>.searcher').show();
+				}, 1200)
 			||
-				$('.flipper.Y>div').hide();
+				$('.flipper.Y.flip>.explorer,.flipper.Y:not(.flip)>.searcher').hide();
 			$flipperXDiv.toggleClass('flip');
 		},
 		setForm = function (doc) {
+			var choices4tags,
+				choices4subtags;
 			tagsChoices.clearStore();
 			subtagsChoices.clearStore();
 			if (doc) {
@@ -256,13 +282,25 @@ $(document).on('ready', function () {
 							subtags.push(subtag);
 					}
 				}
+				choices4tags = [];
+				choices4subtags = [];
+				for (i = 0; i < choices.length; i++) {
+					tags.indexOf(choices[i]._id) < 0 &&
+						choices4tags.push(choices[i]);
+					subtags.indexOf(choices[i]._id) < 0 &&
+						choices4subtags.push(choices[i]);
+				}
 				tagsChoices.setValue(tags);
 				subtagsChoices.setValue(subtags);
 				doc_id = doc._id;
 			}
 			else {
 				doc_id = titleInput.value = urlInput.value = null;
+				choices4tags = choices;
+				choices4subtags = choices;
 			}
+			tagsChoices.setChoices(choices4tags, '_id', '_id');
+			subtagsChoices.setChoices(choices4subtags, '_id', '_id');
 			updateParentTagChoices();
 			return true;
 		},
@@ -285,7 +323,7 @@ $(document).on('ready', function () {
 					'click .ok': function () {
 						$.ajax({
 							type: 'DELETE',
-							url: '/api/documents/'+node.tag,
+							url: '/api/documents/'+node.tag+'?key='+KEY,
 							dataType: 'json',
 							success: function () {
 								node.removeNode();
@@ -297,7 +335,7 @@ $(document).on('ready', function () {
 			}).show();
 		},
 		autoSearchClock = setInterval(autoSearch, 1000),
-		light, lang, doc_id = null, wF = mobile ? 1 : 0.4,
+		light = true, lang, doc_id = null, wF = mobile ? 1 : 0.4,
 		filterByTime = function(ev) {
 			var layers = docsFeatures.getLayers(),
 				i;
@@ -306,16 +344,44 @@ $(document).on('ready', function () {
 					((layers[i].time <= ev.time || !layers[i].time) &&
 						(layers[i].options.color = window.light ? 'cyan' : 'blue')
 					||
-						(layers[i].options.color = 'transparent')) &&
+						(layers[i].options.color = window.light ? 'white' : 'black')) &&
 					layers[i].setStyle(layers[i].options)
 				||
 					((layers[i].time <= ev.time || !layers[i].time) &&
 						layers[i].setOpacity(1)
 					||
-						layers[i].setOpacity(0));
+						layers[i].setOpacity(0.4));
 			}
-		};
+		},
+		urlInput = $('[name=url]')[0],
+		titleInput = $('[name=title]')[0],
+		dateInput = $('[name=date]')[0],
+		typeoflinkInput = $('[name=typeoflink]').on('change', function () {
+			this.value == '1' &&
+				(urlInput.disabled = true) &&
+				explorer.choose()
+			||
+				(urlInput.disabled = false);
+		}),
+		checkTyping = function () {
+			this.value == "0" &&
+				(this.checked = true);
+		},
+		$subtags = $('[name=tags][choices-child]'),
+		$tagsParent = $('[name=parentTags]').on('choice', function () {
+			subtagsChoices.enable();
+		}).on('choice', function (ev) {
+			var regex = new RegExp('(^|/)'+ev.detail.choice.value+'/'),
+				values = subtagsChoices.getValue(),
+				i;
+			for (i = 0; i < values.length; i++) {
+				values[i].value.match(regex) &&
+					subtagsChoices.highlightItem(values[i]);
+			}
+		}),
+		tagsChoices, subtagsChoices, parentTagsChoices;
 	map.timeDimension.on('timeload', filterByTime);
+	map.timeDimensionControl._toggleDateUTC();
 	lastBounds._northEast.lng = lastBounds._southWest.lng + (lastBounds._northEast.lng - lastBounds._southWest.lng)*wF;
 	mobile &&
 		(lastBounds._southWest.lat = lastBounds._southWest.lat + (lastBounds._northEast.lat - lastBounds._southWest.lat)/2);
@@ -374,30 +440,92 @@ $(document).on('ready', function () {
 				map.removeLayer(searchControl.markers);
 				$('a:not(.reset)', searchControl.getContainer()).on('click', function () {
 					dialog.open();
+					$('.leaflet-control-dialog-close', $('.search-selector a').off('click').on('click', function (ev) {
+						searchControl.options.provider = providers[ev.target.name];
+						$('[type="checkbox"]', ev.target.parentNode.parentNode)[0].checked ?
+							($('a', searchControl.getContainer()).off('click') &&
+							dialog.destroy())
+						:
+							dialog.close();
+					}).parent().parent().parent()).off('click').on('click', function () {
+						searchControl.closeResults();
+					});
 				});
-				$('.leaflet-control-dialog-close', $('.search-selector a').on('click', function (ev) {
-					console.log(124);
-					searchControl.options.provider = providers[ev.target.name];
-					$('[type="checkbox"]', ev.target.parentNode.parentNode)[0].checked ?
-						($('a', searchControl.getContainer()).off('click') &&
-						dialog.destroy())
-					:
-						dialog.close();
-				}).parent().parent().parent()).on('click', function () {
-					searchControl.closeResults();
-				});
-				var bcrect = searchControl.getContainer().getBoundingClientRect();
-				dialog = L.control.dialog({
-					anchor: [bcrect.top - 18, bcrect.left + 12],
-					size: [220, 240],
-					initOpen: false
-				}).setContent($('.search-dialog').html()).addTo(map);
+				var bcrect = searchControl.getContainer().getBoundingClientRect(),
+					dialog = L.control.dialog({
+						anchor: [bcrect.top - 18, bcrect.left + 12],
+						size: [220, 240],
+						initOpen: false
+					}).setContent($('.search-dialog').html()).addTo(map);
 				dialog.freeze();
+				datepicker(dateInput, {
+					customMonths: dict['_months'] ? dict['_months'] : null,
+					customDays: dict['_days'] ? dict['_days'] : null,
+					overlayPlaceholder: dict['Enter a 4-digit year'] ? dict['Enter a 4-digit year'] : 'Enter a 4-digit year',
+					overlayButton: dict['Accept'] ? dict['Accept'] : 'Accept'
+				});
+				var options = {
+					loadingText: dict['Loading'] ? dict['Loading'] : 'Loading',
+					noResultsText: dict['No results found'] ? dict['No results found'] : 'No results found',
+					noChoicesText: dict['No categories to choose from'] ? dict['No categories to choose from'] : 'No categories to choose from',
+					itemSelectText: dict['Press to select'] ? dict['Press to select'] : 'Press to select'
+				};
+				parentTagsChoices = new Choices($tagsParent[0], Object.assign({
+					searchResultLimit: 100
+				}, options));
+				tagsChoices = new Choices('[name=tags]:not([choices-child])', Object.assign(options, {
+					editItems: true,
+					maxItemCount: 50,
+					searchResultLimit: 11,
+					removeItemButton: true
+				}));
+				subtagsChoices = new Choices('[name=tags][choices-child]', options).disable();
 				dict['All categories'] &&
 					root.setText(dict['All categories']);
 				window.dict = dict;
 			}
 		});
+	}
+	else {		
+		map.addControl(searchControl = new GeoSearch.GeoSearchControl({
+			searchLabel: 'Enter address'
+		}));
+		map.removeLayer(searchControl.markers);
+		$('a:not(.reset)', searchControl.getContainer()).on('click', function () {
+			dialog.open();
+			$('.leaflet-control-dialog-close', $('.search-selector a').off('click').on('click', function (ev) {
+				searchControl.options.provider = providers[ev.target.name];
+				$('[type="checkbox"]', ev.target.parentNode.parentNode)[0].checked ?
+					($('a', searchControl.getContainer()).off('click') &&
+					dialog.destroy())
+				:
+					dialog.close();
+			}).parent().parent().parent()).off('click').on('click', function () {
+				searchControl.closeResults();
+			});
+		});
+		var bcrect = searchControl.getContainer().getBoundingClientRect(),
+			dialog = L.control.dialog({
+				anchor: [bcrect.top - 18, bcrect.left + 12],
+				size: [220, 240],
+				initOpen: false
+			}).setContent($('.search-dialog').html()).addTo(map);
+		dialog.freeze();
+		datepicker(dateInput);
+		var options = {
+			loadingText: 'Loading',
+			noChoicesText: 'No categories to choose from'
+		};
+		parentTagsChoices = new Choices($tagsParent[0], Object.assign({
+			searchResultLimit: 100
+		}, options));
+		tagsChoices = new Choices('[name=tags]:not([choices-child])', Object.assign(options, {
+			editItems: true,
+			maxItemCount: 50,
+			searchResultLimit: 11,
+			removeItemButton: true
+		}));
+		subtagsChoices = new Choices('[name=tags][choices-child]', options).disable();
 	}
 	L.control.layers({
 		'Terrain': googleTerrain,
@@ -412,53 +540,33 @@ $(document).on('ready', function () {
 	map.on('draw:created', function (ev) {
 		ev.layer.options.color = '#ff0';
 		docFeature.addLayer(ev.layer);
+		$save.show();
 	}).on('draw:drawstart', function () {
 		docFeature.clearLayers();
+		$save.hide();
 	}).on('geosearch/showlocation', function () {
 		var layer = searchControl.markers.getLayers()[0];
 		layer.options.icon.options.iconUrl = 'marker-icon-red.png';
 		docFeature.clearLayers();
 		docFeature.addLayer(layer);
+		$save.show();
 	});
 	var $body = $('body'),
 		$splitDiv = $('div.split', $body),
 		$filesDiv = $('div.files', $body),
 		$flipperXDiv = $('div.X.flipper', $filesDiv),
 		$flipperYDiv = $('div.Y.flipper', $filesDiv),
-		$switchYA = $('.Y.switch'),
+		$switchYA = $('a.Y.switch'),
+		$switchX = $('.X.switch'),
 		$steps = $('[step]'),
 		$form = $('form', $steps.parent()),
 		$save = $('[save]', $steps.parent()).hide(),
 		$searchInput = $('div.searcher form input'),
 		$resultLi = $('li.result'),
+		$nodocsLi = $('li:not([skip]):not(.result)', $resultLi.parent()),
 		$skipLi = $('li[skip]', $resultLi.parent()),
 		$skipI = $('i', $skipLi),
 		$skipSpan = $('span', $skipLi),
-		$editButton = $('.edit', $('.X.switch').on('click', function () {
-			this.className.indexOf('edit') > -1 &&
-				(this.parentNode.className.indexOf('searcher') > -1 &&
-					setForm(documents[$(':checked', $resultLi.parent()).parent()[0].id])
-				||
-					setForm(documents[tree.selectedNode.tag]))
-			||
-				this.className.indexOf('new') > -1 &&
-					setForm(null);
-			flipX();
-		}).parent()),
-		$removeButton = $('.remove', $editButton.parent()).on('click', function () {
-			if (this.parentNode.className.indexOf('searcher') > -1) {
-				var $li = $(':checked', $resultLi.parent()).parent();
-				removeDocument({
-					tag: $li[0].id,
-					removeNode: function () {
-						$li.remove();
-					}
-				});
-			}
-			else {
-				removeDocument(tree.selectedNode);
-			}
-		}),
 		moreDocuments = function (el) {
 			$skipSpan.addClass('hide');
 			$skipI.removeClass('hide');
@@ -466,6 +574,31 @@ $(document).on('ready', function () {
 			el.setAttribute('skip', skip);
 			getDocuments(lastBounds, $searchInput.val(), 0, skip, setList, true);
 		};
+	$switchX.on('click', function () {
+		this.className.indexOf('edit') > -1 &&
+			(this.parentNode.className.indexOf('searcher') > -1 &&
+				setForm(documents[$(':checked', $resultLi.parent()).parent()[0].id])
+			||
+				setForm(documents[tree.selectedNode.tag]))
+		||
+			this.className.indexOf('new') > -1 &&
+				setForm(null);
+		flipX();
+	});
+	$('.remove').on('click', function () {
+		if (this.parentNode.className.indexOf('searcher') > -1) {
+			var $li = $(':checked', $resultLi.parent()).parent();
+			removeDocument({
+				tag: $li[0].id,
+				removeNode: function () {
+					$li.remove();
+				}
+			});
+		}
+		else {
+			removeDocument(tree.selectedNode);
+		}
+	});
 	$skipLi.on('click', function () {
 		moreDocuments(this);
 	});
@@ -488,11 +621,11 @@ $(document).on('ready', function () {
 	$('[search]').on('click', function () {
 		$skipLi.attr('skip', 0);
 		getDocuments(lastBounds, $searchInput.val(), 0, 0, setList, true);
-	})
-	$('a.new').on('click', function () {
+	});
+	$('.new').on('click', function () {
 		doc_id = null;
 	});
-	$('a.edit').on('click', function () {
+	$('.edit').on('click', function () {
 		doc_id = tree.selectedNode.tag;
 	});
 	$('#block-input').on('change', function () {
@@ -508,12 +641,20 @@ $(document).on('ready', function () {
 		$flipperYDiv.toggleClass('flip');
 	});
 	$steps.on('click', function () {
+		var $inputs = $('[required]:invalid', $form);
+		if ($inputs.length > 0) {
+			$inputs.addClass('highlight');
+			setTimeout(function () {
+				$inputs.removeClass('highlight');
+			}, 900);
+			return;
+		}
 		$filesDiv[0].style.left = $splitDiv[0].style.left = '';
 		$filesDiv.toggleClass('inmap');
 		$splitDiv.toggleClass('inmap');
 		this.getAttribute('step') == 'map' &&
-			$save.show() &&
 			$form.hide() &&
+			$switchX.hide() &&
 			map.addControl(draw) &&
 			map.removeLayer(docsFeatures) &&
 			$('.note').addClass('visible') &&
@@ -523,6 +664,7 @@ $(document).on('ready', function () {
 				$('div.note').show();
 			}) &&
 			(doc_id &&
+				$save.show() &&
 				featureCollection2featureGroup({
 					features: [documents[doc_id]]
 				}, docFeature)
@@ -531,6 +673,7 @@ $(document).on('ready', function () {
 		||
 			$save.hide() &&
 			$form.show() &&
+			$switchX.show() &&
 			map.removeControl(draw) &&
 			map.addLayer(docsFeatures) &&
 			$('.note').remove() && 
@@ -556,6 +699,7 @@ $(document).on('ready', function () {
 		!categories.length &&
 			categories.push('');
 		feature.name = titleInput.value;
+		feature.key = KEY;
 		feature.url = urlInput.value;
 		feature.properties = {
 			time: new Date(dateInput.value).getTime()
@@ -563,7 +707,7 @@ $(document).on('ready', function () {
 		feature.categories = categories;
 		$.ajax({
 			type: doc_id ? 'PUT' : 'POST',
-			url: 'api/documents/'+(doc_id ? doc_id : ''),
+			url: 'api/documents/'+(doc_id ? doc_id : '')+'?key='+KEY,
 			dataType: 'json',
 			contentType: 'application/json; charset=UTF-8', 
 			data: JSON.stringify(feature),
@@ -613,24 +757,7 @@ $(document).on('ready', function () {
 		$('div.note').addClass('touch');
 	$('.leaflet-control-attribution').hide();
 
-	var options = {
-			editItems: true,
-			searchFloor: 1,
-			maxItemCount: 50,
-			searchResultLimit: 11,
-			removeItemButton: true
-		},
-		initChoices = function (callback) {
-			$.ajax({
-				type: 'GET',
-				url: '/api/categories/',
-				dataType: 'json',
-				success: function (data) {
-					callback(data, '_id', '_id');
-				}
-			});
-		},
-		renameSubtag = function (ev) {
+	var renameSubtag = function (ev) {
 			var values = subtagsChoices.getValue(true), value, i;
 			for (i = 0; i < values.length; i++) {
 				if (values[i] == ev.detail.value && (value = parentTagsChoices.getValue(true))) {
@@ -674,23 +801,21 @@ $(document).on('ready', function () {
 					subtagsChoices.removeItemsByValue(values[i]);
 			}
 		},
-		$subtags = $('[name=tags][choices-child]'),
-		$tagsParent = $('[name=parentTags]').on('choice', function () {
-			subtagsChoices.enable();
-		}).on('choice', function (ev) {
-			var regex = new RegExp('(^|/)'+ev.detail.choice.value+'/'),
-				values = subtagsChoices.getValue(),
-				i;
-			for (i = 0; i < values.length; i++) {
-				values[i].value.match(regex) &&
-					subtagsChoices.highlightItem(values[i]);
+		choices;		
+	$.ajax({
+		type: 'GET',
+		url: '/api/categories/',
+		dataType: 'json',
+		success: function (data) {
+			choices = [];
+			for (var i = 0; i < data.length; i++) {
+				data[i]._id &&
+					choices.push({
+						_id: data[i]._id.slice(1)
+					});
 			}
-		}),
-		tagsChoices = new Choices('[name=tags]:not([choices-child])', options).ajax(initChoices),
-		subtagsChoices = new Choices('[name=tags][choices-child]', options).ajax(initChoices).disable(),
-		parentTagsChoices = new Choices($tagsParent[0], {
-			searchResultLimit: 100
-		});
+		}
+	});
 	$('[name=tags][choices-child]').on('addItem', renameSubtag).on('hideDropdown', resetParentTag);
 	$('[name=tags]').on('search', function () {
 		var $this = $(this),
@@ -700,6 +825,9 @@ $(document).on('ready', function () {
 			url: '/api/categories/bbox/'+text,
 			dataType: 'json',
 			success: function (data) {
+				for (var i = 0; i < data.length; i++) {
+					data[i]._id = data[i]._id.slice(1);
+				}
 				data.unshift({
 					_id: text
 				});
@@ -708,20 +836,6 @@ $(document).on('ready', function () {
 		});
 	}).on('change', updateParentTagChoices).on('removeItem', removeChildrenTags);
 	
-	var urlInput = $('[name=url]')[0],
-		titleInput = $('[name=title]')[0],
-		dateInput = $('[name=date]')[0],
-		typeoflinkInput = $('[name=typeoflink]').on('change', function () {
-			this.value == '1' &&
-				(urlInput.disabled = true) &&
-				explorer.choose()
-			||
-				(urlInput.disabled = false);
-		}),
-		checkTyping = function () {
-			this.value == "0" &&
-				(this.checked = true);
-		};
 	window.tree = createTree('tree-container', 'transparent', {
 		'ctx4folder': {
 			elements: [{
@@ -763,7 +877,6 @@ $(document).on('ready', function () {
 			}]
 		}
 	});
-	datepicker(dateInput);
 	root = tree.createNode('All categories', true, 'fa fa-folder-open', null, null, 'ctx4folder');
 	tree.nodeBeforeOpenEvent = function (node) {
 		node.setIcon('fa fa-folder-open');
@@ -813,7 +926,7 @@ $(document).on('ready', function () {
 
 function featureGroup2feature(featureGroup) {
 	var layers;
-	if (layers = featureGroup.getLayers()) {
+	if ((layers = featureGroup.getLayers()).length) {
 		var feature;
 		if (layers[0].getRadius) {
 			var bounds = layers[0].getBounds(),
@@ -912,8 +1025,7 @@ function featureCollection2featureGroup(geoJSON, featureGroup, append) {
 					tree.expandNode(nodes[i]);
 				}
 				tree.selectNode(node);
-				$('.edit').prop('disabled', false).removeClass('disabled') &&
-				$('.remove').prop('disabled', false).removeClass('disabled');
+				$('.explorer .edit,.explorer .remove').prop('disabled', false).removeClass('disabled');
 				$('input', $('div.searcher ul')).prop('checked', false);
 				$('input', $('#'+doc._id)).prop('checked', true);
 			}) &&
