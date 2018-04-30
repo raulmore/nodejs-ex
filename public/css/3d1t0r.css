@@ -271,9 +271,8 @@ ul input[type=checkbox]:checked + label {
 	background-color: #fff;
 	background-position: 50%;
 	background-repeat: no-repeat;
-	border: solid #a5a5a5;
 	border-bottom: none;
-	border-radius: 2px;
+	border-radius: 1px;
     border-width: 0 1px 0 0;
 	box-sizing: border-box;
 	color: black;
@@ -289,16 +288,16 @@ ul input[type=checkbox]:checked + label {
     position: relative;
 	text-align: center;
 	text-decoration: none;
-	
-	
-	
-	
-	/*border-bottom: 1px solid #ccc;
+}
+.button.ok,
+.button.cancel {
+	float: none;
+	border-bottom: 1px solid #ccc;
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
 	border-radius: 4px;
 	border: 1px solid #dcdcdc;
-	display: inline-block;*/
+	display: inline-block;
 }
 .button.disabled {
 	cursor: not-allowed;
@@ -320,6 +319,10 @@ ul input[type=checkbox]:checked + label {
 .button.switch.Y {
 	right: 10px;
 }
+a.button.switch.X {
+	margin-left: 10px;
+	margin-top: 10px;
+}
 .button:hover {
 	background-color: #f4f4f4;
 }
@@ -333,10 +336,17 @@ ul input[type=checkbox]:checked + label {
 }
 .primary {
 	color: white;
-	background-color: blue;
+	background-color: orange;
 }
 .primary:hover {
-	background-color: yellow;
+	background-color: rgb(235,125,0);
+}
+[save] {
+	top: calc(25% - 15px);
+	margin-bottom: 30px;
+}
+[step=files] {
+	top: calc(50% - 15px);
 }
 /*
 .files .writer .button {
@@ -431,6 +441,9 @@ ul input[type=checkbox]:checked + label {
 	opacity: 0;
 	z-index: -1;
 }
+.note b {
+	font-weight: normal;
+}
 .note.visible {
 	opacity: 1;
 	z-index: 1;
@@ -438,7 +451,6 @@ ul input[type=checkbox]:checked + label {
 span.note {
 	left: 75px;
 	width: 350px;
-	font-weight: bold;
 	padding: 10px;
 	padding-right: 30px;
 	border-radius: 10px;
@@ -645,8 +657,13 @@ div.note.draw.dark {
 
 
 
+form {
+	margin-bottom: 10%;
+}
 .radio {
 	position: relative;
+	margin-left: 15%;
+	margin-top: 1%;
 }
 .radio label {
 	position: relative;

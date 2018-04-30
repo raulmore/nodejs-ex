@@ -177,7 +177,7 @@ $(document).on('ready', function () {
 								featureCollection2featureGroup({
 									features: [documents[node.tag]]
 								}, docsFeatures);
-								$('.searcher .edit,.searcher .remove').prop('disabled', false).removeClass('disabled');
+								$('.edit,.remove').prop('disabled', false).removeClass('disabled');
 							}
 							else {
 								category = '/'+node.text;
@@ -189,6 +189,7 @@ $(document).on('ready', function () {
 									(tree.expandNode(nodes[i]) || true) &&
 									getDocuments(lastBounds, category, 0, 0, setTree);
 								lastCall = [category, lastBounds];
+								$('.edit,.remove').prop('disabled', true).addClass('disabled');
 							}
 							break;
 						}
@@ -269,6 +270,7 @@ $(document).on('ready', function () {
 					tags = [], subtags = [];
 				titleInput.value = doc.name;
 				urlInput.value = doc.url;
+				dateInput.value = new Date(doc.properties.time).toDateString();
 				for (i = 0; i < doc.categories.length; i++) {
 					tag = doc.categories[i].split('/');
 					tag.length > 1 && tags.indexOf(tag[1]) < 0 &&
@@ -295,7 +297,7 @@ $(document).on('ready', function () {
 				doc_id = doc._id;
 			}
 			else {
-				doc_id = titleInput.value = urlInput.value = null;
+				doc_id = titleInput.value = urlInput.value = dateInput.value = null;
 				choices4tags = choices;
 				choices4subtags = choices;
 			}
@@ -892,6 +894,7 @@ $(document).on('ready', function () {
 			(tree.expandNode(root) || true) &&
 			getDocuments(lastBounds, null, 0, 0, setTree);
 		lastCall = ['', lastBounds];
+		$('.edit,.remove').prop('disabled', true).addClass('disabled');
 	}
 	tree.selectNode(root);
 	getDocuments(lastBounds, null, 0, 0, setTree);
